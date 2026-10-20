@@ -42,9 +42,9 @@ export default function Navbar() {
     <>
       <div className="site-announcement">
         <span className="site-announcement__mark" aria-hidden="true" />
-        <span>Direct ordering, thoughtful service</span>
+        <span>Little things for a lovelier everyday</span>
         <span className="site-announcement__divider" aria-hidden="true">/</span>
-        <span>Complimentary shipping across India over ₹999</span>
+        <span>Free shipping across India over ₹999</span>
       </div>
       <header className={`site-nav glass-nav ${isScrolled ? "site-nav--scrolled" : ""}`}>
         <div className="site-nav__inner">

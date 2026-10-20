@@ -1,14 +1,15 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { siteConfig, getWhatsAppSupportUrl } from "@/config/site";
+import { getWhatsAppSupportUrl } from "@/config/site";
 import { Sparkles, ShieldCheck, HeartHandshake, Eye, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui";
+import { categoryMeta } from "@/data/products";
 
 export const metadata = {
   title: "About Us | Fylter",
   description:
-    "Learn the story of Fylter and our mission to deliver Purely Filters with unmatched aesthetics and simplicity.",
+    "Meet Fylter: a happy little shop for aesthetic stationery, playful finds, and clever everyday things.",
 };
 
 const pillars = [
@@ -16,19 +17,19 @@ const pillars = [
     icon: <Eye className="w-5 h-5" />,
     iconClass: "text-fylter-gold",
     title: "Aesthetic Curation",
-    body: "Every item in our catalog is chosen not just for its micron-level efficacy, but for how elegantly it sits on your desk, vanity, or kitchen counter.",
+    body: "We look for the lovely details: playful paper goods, useful little upgrades, and gifts that feel special.",
   },
   {
     icon: <ShieldCheck className="w-5 h-5 text-emerald-400" />,
     iconClass: "text-emerald-400",
-    title: "Verified Integrity",
-    body: "From DuPont SPE/PEM electrolysis membranes to H13 True HEPA filters, our specifications are honest, rigorous, and lab-verified.",
+    title: "Little Details Matter",
+    body: "We want every find to feel thoughtful, useful, and joyful to bring into your everyday.",
   },
   {
     icon: <HeartHandshake className="w-5 h-5 text-fylter-lightGold" />,
     iconClass: "text-fylter-lightGold",
     title: "Human Communication",
-    body: "No robot gatekeepers. Message us directly on WhatsApp to confirm delivery dates, ask about replacement filters, and pay securely.",
+    body: "No robot gatekeepers. Message us directly on WhatsApp or Instagram whenever you need a hand.",
   },
 ];
 
@@ -44,12 +45,11 @@ export default function AboutPage() {
             Our Origin
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-fylter-offWhite tracking-tight">
-            The Philosophy of <span className="gold-gradient-text">Fylter</span>
+            A little delight, by <span className="gold-gradient-text">design.</span>
           </h1>
           <p className="text-lg text-fylter-muted max-w-2xl mx-auto leading-relaxed">
-            In a world inundated with micro-pollutants and complicated checkout funnels, Fylter was
-            created with a single uncompromising mantra:{" "}
-            <strong className="text-fylter-gold">Purely Filters.</strong>
+            Fylter is a happy little shop for things that make everyday life feel a bit more you:
+            pretty paper, playful surprises, and clever finds.
           </p>
         </div>
 
@@ -61,8 +61,8 @@ export default function AboutPage() {
           <div className="md:col-span-6">
             <Card className="rounded-2xl overflow-hidden border-fylter-gold/30 shadow-xl aspect-square p-0">
               <Image
-                src="/assets/fylter-logo.jpeg"
-                alt="FYLTER Brandmark"
+                src={categoryMeta[0].image}
+                alt="A cozy desk ready for creative moments"
                 fill
                 className="object-cover"
               />
@@ -72,22 +72,20 @@ export default function AboutPage() {
           {/* Copy */}
           <div className="md:col-span-6 space-y-4 text-sm text-fylter-muted leading-relaxed animate-slide-up">
             <h2 className="text-2xl font-bold text-fylter-offWhite">
-              Designed For Intentional Living
+              Made for your little everyday moments
             </h2>
             <p>
-              We believe that filtration is not just an appliance feature—it is the baseline for how
-              we experience our home, our water, our workspaces, and our travels.
+              We believe small things can make an ordinary day feel brighter: a notebook you love,
+              a thoughtful gift, or a clever find that makes a routine easier.
             </p>
             <p>
-              Traditional ecommerce platforms force shoppers through confusing cart flows, generic
-              inventory catalogs, and impersonal customer support bots. We set out to build an
-              intimate boutique experience: discovering thoughtfully curated lifestyle and filtration
-              products, paired with instant one-on-one ordering on WhatsApp and Instagram.
+              We built Fylter to make discovering those little things feel easy and personal.
+              Explore the edit, find a new favourite, and reach out to a real person whenever
+              you need a hand.
             </p>
             <p>
-              When you purchase from Fylter, you are speaking directly to dedicated specialists who
-              verify your requirements, share actual product videos, and guarantee seamless doorstep
-              delivery across India.
+              Every order comes with thoughtful support and delivery across India, from our first
+              hello to the moment your new find reaches your door.
             </p>
           </div>
         </div>
@@ -115,7 +113,7 @@ export default function AboutPage() {
         {/* ── CTA ── */}
         <div className="p-10 rounded-2xl glass-panel border border-fylter-gold/35 text-center space-y-4 shadow-2xl">
           <h2 className="text-2xl sm:text-3xl font-bold text-fylter-offWhite">
-            Ready to upgrade your everyday?
+            Ready to find your next little lovely?
           </h2>
           <p className="text-sm text-fylter-muted max-w-lg mx-auto">
             Explore our curated catalog or reach out to our team with any custom requests.

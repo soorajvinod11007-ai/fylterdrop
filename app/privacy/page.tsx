@@ -3,7 +3,7 @@ import { siteConfig } from "@/config/site";
 
 export const metadata = {
   title: "Privacy Policy",
-  description: "Privacy policy for Fylter - Purely Filters.",
+  description: "Privacy policy for Fylter's curated lifestyle shop.",
 };
 
 export default function PrivacyPage() {

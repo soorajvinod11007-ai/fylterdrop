@@ -8,7 +8,7 @@
 
 **Project:** fylter
 **Generated:** 2026-10-18 19:05:07
-**Category:** E-commerce Luxury
+**Category:** Pinterest-inspired lifestyle e-commerce
 
 ---
 
@@ -18,35 +18,35 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#1C1917` | `--color-primary` |
+| Primary | `#73558D` | `--color-primary` |
 | On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#44403C` | `--color-secondary` |
+| Secondary | `#D85879` | `--color-secondary` |
 | On Secondary | `#FFFFFF` | `--color-on-secondary` |
-| Accent/CTA | `#A16207` | `--color-accent` |
+| Accent/CTA | `#D85879` | `--color-accent` |
 | On Accent/CTA | `#FFFFFF` | `--color-on-accent` |
-| Background | `#FAFAF9` | `--color-background` |
-| Foreground | `#0C0A09` | `--color-foreground` |
-| Card | `#FFFFFF` | `--color-card` |
-| Card Foreground | `#0C0A09` | `--color-card-foreground` |
-| Muted | `#E8ECF0` | `--color-muted` |
-| Muted Foreground | `#475569` | `--color-muted-foreground` |
-| Border | `#D6D3D1` | `--color-border` |
+| Background | `#FFF8F1` | `--color-background` |
+| Foreground | `#33283D` | `--color-foreground` |
+| Card | `#FFFEFD` | `--color-card` |
+| Card Foreground | `#33283D` | `--color-card-foreground` |
+| Muted | `#FBE2EB` | `--color-muted` |
+| Muted Foreground | `#665C70` | `--color-muted-foreground` |
+| Border | `#EBDFEA` | `--color-border` |
 | Destructive | `#DC2626` | `--color-destructive` |
 | On Destructive | `#FFFFFF` | `--color-on-destructive` |
 | Ring | `#1C1917` | `--color-ring` |
 
-**Color Notes:** Premium dark + gold accent [Accent adjusted from #CA8A04]
+**Color Notes:** Warm cream, soft pink, lilac, mint, and sunshine yellow; playful accents frame the product imagery.
 
 ### Typography
 
-- **Heading Font:** Cormorant
-- **Body Font:** Montserrat
-- **Mood:** luxury, high-end, fashion, elegant, refined, premium
-- **Google Fonts:** [Cormorant + Montserrat](https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap)
+- **Heading Font:** Fraunces
+- **Body Font:** DM Sans
+- **Mood:** playful, curated, approachable, editorial, lifestyle retail
+- **Google Fonts:** [Fraunces + DM Sans](https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Cormorant:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap');
 ```
 
 ### Spacing Variables
@@ -164,28 +164,28 @@
 
 ## Style Guidelines
 
-**Style:** Liquid Glass
+**Style:** Warm editorial discovery
 
-**Keywords:** dynamic material, optical glass, translucency, lensing, refraction, fluid morphing, system navigation
+**Keywords:** Pinterest-inspired, image-led discovery, warm neutral canvas, soft color accents, rounded product cards, playful editorial typography
 
-**Best For:** Apple-platform navigation, controls, and system-aligned app chrome
+**Best For:** Curated lifestyle, home, wellness, and giftable products
 
-**Key Effects:** Lensing and refraction, adaptive translucency, and fluid morph transitions aligned to Apple platform behavior
+**Key Effects:** Gentle image zoom, subtle card lift, clear focus states, and restrained transitions
 
 ### Page Pattern
 
-**Pattern Name:** Feature-Rich Showcase
+**Pattern Name:** Curated product discovery
 
-- **Conversion Strategy:** Clear feature hierarchy. One key message per card. Strong CTA repetition.
-- **CTA Placement:** Hero (sticky) + After features + Bottom
-- **Section Order:** Hero (value prop) > Feature grid/cards (4-6) > Use cases or benefits > Social proof or logos > CTA
+- **Conversion Strategy:** Lead with aspirational product imagery, then make categories and buying details easy to scan.
+- **CTA Placement:** Hero + product collections + helpful support CTA
+- **Section Order:** Editorial hero > featured products > visual categories > service benefits > trending products > support CTA
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Vibrant & Block-based
-- ❌ Playful colors
+- ❌ Dark luxury/glassmorphism as the default storefront surface
+- ❌ Overloaded gradients, neon accents, or product cards with dense copy
 
 ### Additional Forbidden Patterns
 

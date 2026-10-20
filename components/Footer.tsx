@@ -25,9 +25,9 @@ export default function Footer() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-fylter-offWhite">Curated Purity</h4>
+              <h4 className="text-sm font-semibold text-fylter-offWhite">Thoughtfully picked</h4>
               <p className="text-xs text-fylter-muted mt-1">
-                Hand-selected air, water, and lifestyle filtration designed for modern living.
+              A lovely mix of paper goods, playful finds, and everyday delights.
               </p>
             </div>
           </div>
@@ -37,9 +37,9 @@ export default function Footer() {
               <MessageCircle className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-fylter-offWhite">Frictionless Ordering</h4>
+              <h4 className="text-sm font-semibold text-fylter-offWhite">A real human, always</h4>
               <p className="text-xs text-fylter-muted mt-1">
-                Direct WhatsApp & Instagram confirmation. Talk to real humans before buying.
+                Reach us on WhatsApp or Instagram. Real people are always happy to help.
               </p>
             </div>
           </div>
@@ -49,9 +49,9 @@ export default function Footer() {
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-fylter-offWhite">Pan-India Delivery</h4>
+              <h4 className="text-sm font-semibold text-fylter-offWhite">Delivered with care</h4>
               <p className="text-xs text-fylter-muted mt-1">
-                Express insured shipping to 19,000+ pin codes with live dispatch tracking.
+                We deliver your new favourite finds to homes across India.
               </p>
             </div>
           </div>
@@ -61,9 +61,9 @@ export default function Footer() {
               <ShieldCheck className="w-5 h-5 text-fylter-gold" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-fylter-offWhite">Quality Guaranteed</h4>
+              <h4 className="text-sm font-semibold text-fylter-offWhite">A little peace of mind</h4>
               <p className="text-xs text-fylter-muted mt-1">
-                7-day replacement guarantee on defective units with hassle-free support.
+                Shop with confidence, backed by friendly help whenever you need it.
               </p>
             </div>
           </div>
@@ -168,23 +168,18 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/shop?category=Home+%26+Living" className="hover:text-fylter-gold transition-colors">
-                  Home & Living
+                <Link href="/shop?category=Aesthetic+Stationery" className="hover:text-fylter-gold transition-colors">
+                  Aesthetic Stationery
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=Lifestyle+%26+Wellness" className="hover:text-fylter-gold transition-colors">
-                  Lifestyle & Wellness
+                <Link href="/shop?category=Cute+Novelty" className="hover:text-fylter-gold transition-colors">
+                  Cute Novelty
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=Tech+Accessories" className="hover:text-fylter-gold transition-colors">
-                  Tech Accessories
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=Travel+%26+Outdoor" className="hover:text-fylter-gold transition-colors">
-                  Travel & Outdoor
+                <Link href="/shop?category=Smart+Everyday" className="hover:text-fylter-gold transition-colors">
+                  Smart Everyday
                 </Link>
               </li>
             </ul>
@@ -239,7 +234,7 @@ export default function Footer() {
             Shipping
           </Link>
           <span className="text-fylter-gold/60">•</span>
-          <span>Engineered with Purity</span>
+          <span>Made for everyday joy</span>
         </div>
       </div>
     </footer>

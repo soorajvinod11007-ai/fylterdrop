@@ -23,8 +23,8 @@ export interface SiteConfig {
 
 export const siteConfig: SiteConfig = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "Fylter",
-  tagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || "Purely Filters",
-  description: "Curated everyday essentials, aesthetic finds, and high-performance filters worth bringing home.",
+  tagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || "Little finds, big happy",
+  description: "A happy little shop for aesthetic stationery, cute novelty finds, and clever everyday things.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://fylter.in",
   // Change your WhatsApp ordering number here (include country code without +):
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919747378958",
@@ -115,4 +115,3 @@ export function getWhatsAppContactInquiryUrl({
   const msg = `Hello ${targetBrand} Team 👋\n\nNew Inquiry from Website Contact Form:\n• Name: ${name}\n• Phone: ${phone || "N/A"}\n• Email: ${email || "N/A"}\n\nMessage:\n"${message}"`;
   return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`;
 }
-

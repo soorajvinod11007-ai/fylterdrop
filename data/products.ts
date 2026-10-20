@@ -4,9 +4,10 @@
  * To add, edit, or remove products:
  * 1. Add a new object following the Product interface.
  * 2. Ensure `slug` is unique (used in URL /products/slug).
- * 3. Set `featured: true` to display on the Home page curated section.
- * 4. Set `trending: true` for the horizontal trending carousel.
- * 5. Set `newArrival: true` to display under New Arrivals.
+ * 3. Set `featured: true` to use a product image in the Home page hero.
+ * 4. Set `kidsCollection: true` to include the product in the Kids Corner.
+ * 5. Set `trending: true` for the trending shop filter.
+ * 6. Set `newArrival: true` to display under New Arrivals.
  */
 
 export interface ProductVariant {
@@ -14,12 +15,21 @@ export interface ProductVariant {
   values: string[];
 }
 
+export const productCategories = [
+  "Aesthetic Stationery",
+  "Cute Novelty",
+  "Smart Everyday",
+] as const;
+
+export type ProductCategory = (typeof productCategories)[number];
+
 export interface Product {
   id: string;
   slug: string;
   sku: string;
   name: string;
-  category: "Home & Living" | "Lifestyle & Wellness" | "Tech Accessories" | "Travel & Outdoor";
+  category: ProductCategory;
+  kidsCollection?: boolean;
   price: number;
   oldPrice?: number;
   discount?: number; // percentage
@@ -43,7 +53,7 @@ export const products: Product[] = [
     slug: "puremist-ultrasonic-air-humidifier",
     sku: "FYL-001",
     name: "PureMist Ultrasonic Nano Air Humidifier & Diffuser",
-    category: "Home & Living",
+    category: "Smart Everyday",
     price: 1499,
     oldPrice: 2299,
     discount: 35,
@@ -84,7 +94,7 @@ export const products: Product[] = [
     slug: "hydroaura-hydrogen-mineral-infuser-bottle",
     sku: "FYL-002",
     name: "HydroAura SPE Electrolysis Hydrogen Water Bottle",
-    category: "Lifestyle & Wellness",
+    category: "Smart Everyday",
     price: 2999,
     oldPrice: 4499,
     discount: 33,
@@ -124,7 +134,7 @@ export const products: Product[] = [
     slug: "aerohepa-desktop-air-purifier",
     sku: "FYL-003",
     name: "AeroHepa H13 True HEPA Compact Desktop Air Purifier",
-    category: "Home & Living",
+    category: "Smart Everyday",
     price: 3499,
     oldPrice: 4999,
     discount: 30,
@@ -164,7 +174,7 @@ export const products: Product[] = [
     slug: "showerspa-15stage-chlorine-water-filter",
     sku: "FYL-004",
     name: "ShowerSpa 15-Stage Hard Water & Chlorine Filter",
-    category: "Lifestyle & Wellness",
+    category: "Smart Everyday",
     price: 1199,
     oldPrice: 1799,
     discount: 33,
@@ -203,7 +213,7 @@ export const products: Product[] = [
     slug: "blueshield-magnetic-privacy-anti-glare-filter",
     sku: "FYL-005",
     name: "BlueShield Magnetic Anti-Glare & Blue Light Filter",
-    category: "Tech Accessories",
+    category: "Smart Everyday",
     price: 1799,
     oldPrice: 2499,
     discount: 28,
@@ -241,7 +251,7 @@ export const products: Product[] = [
     slug: "aeropour-precision-mesh-coffee-filter",
     sku: "FYL-006",
     name: "AeroPour Double-Mesh Titanium Pour-Over Coffee Filter",
-    category: "Lifestyle & Wellness",
+    category: "Smart Everyday",
     price: 999,
     oldPrice: 1499,
     discount: 33,
@@ -280,7 +290,7 @@ export const products: Product[] = [
     slug: "nomadpure-survival-straw-water-filter",
     sku: "FYL-007",
     name: "NomadPure Ultra-Filter Outdoor Survival Straw",
-    category: "Travel & Outdoor",
+    category: "Smart Everyday",
     price: 1299,
     oldPrice: 1899,
     discount: 31,
@@ -319,7 +329,7 @@ export const products: Product[] = [
     slug: "crystalclean-faucet-water-purifier",
     sku: "FYL-008",
     name: "CrystalClean Transparent Tap Ceramic Water Purifier",
-    category: "Home & Living",
+    category: "Smart Everyday",
     price: 899,
     oldPrice: 1399,
     discount: 35,
@@ -357,7 +367,7 @@ export const products: Product[] = [
     slug: "dustshield-precision-vacuum-filter",
     sku: "FYL-009",
     name: "DustShield Precision Desk & Keyboard Vacuum Purifier",
-    category: "Tech Accessories",
+    category: "Smart Everyday",
     price: 1199,
     oldPrice: 1699,
     discount: 29,
@@ -396,7 +406,7 @@ export const products: Product[] = [
     slug: "solaris-uvc-self-cleaning-smart-flask",
     sku: "FYL-010",
     name: "Solaris UV-C Self-Cleaning Insulated Water Bottle",
-    category: "Travel & Outdoor",
+    category: "Smart Everyday",
     price: 2499,
     oldPrice: 3499,
     discount: 28,
@@ -435,7 +445,7 @@ export const products: Product[] = [
     slug: "soundpure-studio-magnetic-pop-filter",
     sku: "FYL-011",
     name: "SoundPure Studio Dual-Layer Metal Acoustic Pop Filter",
-    category: "Tech Accessories",
+    category: "Smart Everyday",
     price: 849,
     oldPrice: 1299,
     discount: 34,
@@ -473,7 +483,7 @@ export const products: Product[] = [
     slug: "zenbreeze-aroma-filtered-personal-fan",
     sku: "FYL-012",
     name: "ZenBreeze Aromatherapy Filtered Desktop Fan",
-    category: "Home & Living",
+    category: "Smart Everyday",
     price: 1349,
     oldPrice: 1999,
     discount: 32,
@@ -511,40 +521,32 @@ export const products: Product[] = [
 
 export const categories = [
   "All",
-  "Home & Living",
-  "Lifestyle & Wellness",
-  "Tech Accessories",
-  "Travel & Outdoor"
+  ...productCategories,
 ] as const;
 
 export type Category = (typeof categories)[number];
 
 export interface CategoryInfo {
-  name: Exclude<Category, "All">;
+  name: ProductCategory;
   description: string;
   image: string;
 }
 
 export const categoryMeta: CategoryInfo[] = [
   {
-    name: "Home & Living",
-    description: "Air humidifiers, HEPA desktop purifiers, and tap water filtration engineered for clean home sanctuaries.",
-    image: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=1000&q=80",
+    name: "Aesthetic Stationery",
+    description: "Pretty paper goods, desk accessories, and little details to make every note feel special.",
+    image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1000&q=85",
   },
   {
-    name: "Lifestyle & Wellness",
-    description: "SPE electrolysis hydrogen bottles, multi-stage shower filters, and precision titanium coffee mesh.",
-    image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=1000&q=80",
+    name: "Cute Novelty",
+    description: "Unexpected, joyful little finds that are as fun to give as they are to keep.",
+    image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=1000&q=85",
   },
   {
-    name: "Tech Accessories",
-    description: "Snap-on magnetic privacy screens, precision desktop vacuum purifiers, and acoustic pop filters.",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=1000&q=80",
-  },
-  {
-    name: "Travel & Outdoor",
-    description: "Survival hollow-fiber straw filters and deep UV-C self-cleaning vacuum bottles for off-grid adventures.",
-    image: "https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=1000&q=80",
+    name: "Smart Everyday",
+    description: "Clever little upgrades for your routines, your space, and everything in between.",
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85",
   },
 ];
 

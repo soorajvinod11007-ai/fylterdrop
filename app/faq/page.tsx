@@ -34,8 +34,8 @@ export default function FAQPage() {
       a: "Every Fylter item is backed by our 7-Day Replacement Guarantee. Simply send us an unboxing photo or quick video on WhatsApp or Instagram within 7 days of delivery, and we will dispatch a brand-new replacement unit without tedious warranty paperwork."
     },
     {
-      q: "How can I purchase replacement cartridges or filter cores?",
-      a: "We maintain ready stock for all replacement filters (such as ShowerSpa cartridges, AeroHepa filter cores, and faucet ceramic elements). You can order refills at any time by messaging us your original order details on WhatsApp."
+      q: "Can you help me choose the right find?",
+      a: "Of course. Tell us what you are shopping for, who it is for, or what you have in mind. Our team will be happy to help you find a lovely fit."
     }
   ];
 
@@ -95,7 +95,7 @@ export default function FAQPage() {
             Have a question not listed here?
           </h3>
           <p className="text-xs sm:text-sm text-fylter-muted max-w-md mx-auto">
-            Our team is available on WhatsApp and Instagram to help you find the right filter for your space.
+            Our team is available on WhatsApp and Instagram to help you find your next favourite.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <a

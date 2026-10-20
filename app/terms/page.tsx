@@ -47,7 +47,7 @@ export default function TermsPage() {
           <section className="space-y-2">
             <h2 className="text-lg font-bold text-fylter-offWhite">4. Limitation of Liability</h2>
             <p>
-              Fylter shall not be liable for any indirect, incidental, or consequential damages resulting from the misuse or unauthorized modification of filtration equipment or accessories.
+              Fylter shall not be liable for any indirect, incidental, or consequential damages resulting from the misuse or unauthorized modification of products or accessories.
             </p>
           </section>
         </div>

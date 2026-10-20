@@ -1,11 +1,8 @@
-# FYLTER — Purely Filters
+# FYLTER — Little finds, big happy
 
-A modern, high-end product catalog and discovery web experience for **FYLTER** ("PURELY FILTERS"). Built with Next.js 14, TypeScript, and Tailwind CSS.
+A Pinterest-inspired lifestyle shop for aesthetic stationery, cute novelty finds, smart everyday products, and a dedicated Kids Corner. Built with Next.js 14, TypeScript, and Tailwind CSS.
 
-Engineered around Fylter's brand visual identity:
-- **Primary Deep Teal**: `#0A2D2F`, `#062326`
-- **Champagne Gold Accents**: `#C5A566`, `#D8BC7A`
-- **Frictionless Social Commerce**: Instant ordering via **WhatsApp** and **Instagram** without traditional cart checkouts or card payment gateways.
+Customers can discover products by collection and order through **WhatsApp** or **Instagram**.
 
 ---
 
@@ -27,6 +24,25 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 npm run build
 npm run start
 ```
+
+---
+
+## 🚀 Deploying to Vercel with Shared Product Storage
+
+The storefront can run without a database, but product edits will then remain in the current browser. To share products across visitors and devices:
+
+1. Create a Supabase project and run both SQL migrations in `supabase/migrations/` in order using its SQL Editor.
+2. Import this repository into Vercel and configure these server-side environment variables for Production (and Preview if needed):
+   - `SUPABASE_URL` — the Supabase project URL.
+   - `SUPABASE_SERVICE_ROLE_KEY` — the project service-role key. Keep it server-only; never use a `NEXT_PUBLIC_` prefix.
+   - `ADMIN_PIN` — a private passphrase of at least 12 characters.
+   - `ADMIN_SESSION_SECRET` — a random secret used to sign admin sessions (at least 32 random bytes, e.g. generated with `openssl rand -base64 48`).
+   - `NEXT_PUBLIC_SITE_URL` — `https://fylter.in`.
+3. Deploy the project. The first catalog request initializes the shared catalog with the products in `data/products.ts` if the database row is empty.
+4. In Vercel project settings, add `fylter.in` and `www.fylter.in` if desired. Update the domain registrar with the exact DNS records Vercel displays, then wait for Vercel to verify the domain and issue HTTPS.
+5. Open `/admin` and sign in using `ADMIN_PIN`. Product changes are shared when the Admin page reports that the shared catalog is connected. Login attempts are rate-limited using the Supabase-backed migration.
+
+Do not commit real environment values or put Supabase service-role credentials in client-side variables. The `.env.example` file contains blank placeholders only. If Supabase is unavailable or not configured, product edits stay in that browser and the Admin page displays the storage status.
 
 ---
 
@@ -66,34 +82,34 @@ Simply add a new object to the `products` array:
 ```typescript
 {
   id: "fyl-013",
-  slug: "ceramic-mineral-gravity-water-filter", // Unique URL slug: /products/your-slug
+  slug: "pastel-desk-planner",                // Unique URL slug: /products/your-slug
   sku: "FYL-013",                             // Product SKU shown on website & WhatsApp
-  name: "Ceramic Mineral Gravity Water Filter",
-  category: "Home & Living",                  // "Home & Living" | "Lifestyle & Wellness" | "Tech Accessories" | "Travel & Outdoor"
-  price: 2499,                                // Price in INR
-  oldPrice: 3499,                             // Optional original price for strike-through
-  discount: 28,                               // Discount percentage badge
+  name: "Pastel Desk Planner",
+  category: "Aesthetic Stationery",            // "Aesthetic Stationery" | "Cute Novelty" | "Smart Everyday"
+  kidsCollection: false,                      // Set true to also show it in Kids Corner
+  price: 499,                                  // Price in INR
+  oldPrice: 699,                               // Optional original price for strike-through
+  discount: 29,                                // Discount percentage badge
   images: [
     "/products/fyl-013-1.webp",               // Primary image
     "/products/fyl-013-2.webp"                // Gallery images
   ],
-  shortDescription: "Gravity-fed benchtop water purifier with natural activated carbon and silver-infused ceramic.",
-  description: "Detailed description of the product, materials, and benefits...",
+  shortDescription: "A soft pastel planner for happy, organized days.",
+  description: "Describe the product, materials, and benefits...",
   features: [
-    "0.2 Micron ceramic filtration",
-    "Removes 99.9% of bacteria and heavy metals",
-    "No electricity or plumbing required"
+    "Undated weekly and monthly layouts",
+    "Smooth, easy-to-write pages",
+    "Compact size for a desk or tote"
   ],
   specifications: {
-    "Capacity": "12 Liters",
-    "Filter Lifespan": "12 Months (5,000 Liters)",
-    "Body Material": "Food-grade 304 Stainless Steel"
+    "Pages": "120",
+    "Cover": "Soft-touch cardstock",
+    "Size": "A5"
   },
   variants: [
-    { name: "Capacity", values: ["8.5 Liters", "12 Liters"] },
-    { name: "Finish", values: ["Brushed Steel", "Teal Powder Coat"] }
+    { name: "Color", values: ["Blush Pink", "Lavender"] }
   ],
-  featured: true,    // Set to true to show on Home page "Curated For You"
+  featured: true,    // Set to true to feature on the home page
   trending: true,    // Set to true to show in the "Trending Now" carousel
   newArrival: true,  // Set to true to mark with a "New" badge
   stockStatus: "In Stock", // "In Stock" | "Low Stock" | "Pre-Order"
@@ -128,35 +144,14 @@ Open [`data/products.ts`](file:///c:/Users/ADMIN/OneDrive/fylter/data/products.t
 ## 🏛️ Architecture & Data Flow
 
 ```
-┌─────────────────────────────────┐       ┌───────────────────────────────┐
-│  data/products.ts &             │       │      Browser LocalStorage     │
-│  config/site.ts                 │       │    (fylter_admin_* keys)      │
-└───────────────┬─────────────────┘       └───────────────┬───────────────┘
-                │                                         │
-                ▼                                         ▼
-      ┌─────────────────────────────────────────────────────────┐
-      │          AdminContext (context/AdminContext.tsx)        │
-      │    - Hydrates initial products and config               │
-      │    - Merges local edits in real time                    │
-      └───────┬──────────────────┬──────────────────┬───────────┘
-              │                  │                  │
-              ▼                  ▼                  ▼
-      ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-      │  Home Page    │  │   Shop Page   │  │Product Detail │
-      │(app/page.tsx) │  │(app/shop/...) │  │(app/products) │
-      └───────┬───────┘  └───────┬───────┘  └───────┬───────┘
-              │                  │                  │
-              └──────────────────┼──────────────────┘
-                                 │
-                                 ▼
-                     ┌───────────────────────┐
-                     │ WhatsApp Direct Order │
-                     │   (wa.me URL action)  │
-                     └───────────────────────┘
+Storefront pages ──> AdminContext ──> /api/catalog ──> Supabase catalog
+                           │
+                           └── browser localStorage fallback when shared storage is unavailable
+Admin UI ──> signed HTTP-only admin session ──> authenticated catalog writes
 ```
 
-1. **State Hydration:** When a user visits the storefront, [AdminContext.tsx](file:///c:/Users/ADMIN/OneDrive/fylter/context/AdminContext.tsx) bootstraps defaults from [data/products.ts](file:///c:/Users/ADMIN/OneDrive/fylter/data/products.ts) and [config/site.ts](file:///c:/Users/ADMIN/OneDrive/fylter/config/site.ts).
-2. **Unified Data Source:** Home (`/`), Shop (`/shop`), and Product Detail (`/products/[slug]`) pages read through `AdminContext`.
+1. **State Hydration:** [AdminContext.tsx](file:///c:/Users/ADMIN/OneDrive/fylter/context/AdminContext.tsx) loads shared catalog data through `/api/catalog`; [data/products.ts](file:///c:/Users/ADMIN/OneDrive/fylter/data/products.ts) seeds a new catalog, while localStorage is a browser-only fallback.
+2. **Unified Data Source:** Storefront pages read products through `AdminContext`; Admin edits are written to Supabase only after server-side session validation.
 3. **Checkout Transformation:** Selecting variants and clicking **"Order on WhatsApp"** executes `getWhatsAppOrderUrl()` which generates an encoded payload including SKU, Title, Variant, and canonical link directly to the merchant's WhatsApp.
 
 ---

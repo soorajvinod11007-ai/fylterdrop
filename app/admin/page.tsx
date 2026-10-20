@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAdmin } from "@/context/AdminContext";
 import type { SiteConfig } from "@/config/site";
-import type { Product, ProductVariant } from "@/data/products";
+import { productCategories, type Product, type ProductVariant } from "@/data/products";
 import Link from "next/link";
 import { Toast as DSToast, Badge, Card } from "@/components/ui";
 import {
@@ -36,33 +36,6 @@ import {
 } from "lucide-react";
 import ProductImageManager from "@/components/admin/ProductImageManager";
 
-// ─── Enhanced Security Utilities ──────────────────────────────────
-// Default PIN hash (SHA-256 hex digest for default PIN "1234")
-const DEFAULT_PIN_HASH = "0b5cae486077346d17723ad7de67ba3cdea0cb253b36a458081686e19eadb3b3";
-const STORAGE_KEY_PIN_HASH = "fylter_admin_pin_hash";
-const STORAGE_KEY_AUTH_TOKEN = "fylter_admin_auth_token";
-const STORAGE_KEY_AUTH_TIME = "fylter_admin_auth_timestamp";
-const STORAGE_KEY_ATTEMPTS = "fylter_admin_failed_attempts";
-const STORAGE_KEY_LOCKOUT = "fylter_admin_lockout_until";
-
-// 2 Hours auto-timeout for elevated security
-const SESSION_DURATION_MS = 2 * 60 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 60 * 1000; // 60 seconds freeze
-
-async function hashPin(pin: string): Promise<string> {
-  const enc = new TextEncoder();
-  const data = enc.encode(`fylter_salt_${pin.trim()}`);
-  const hashBuf = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuf));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function getStoredPinHash(): string {
-  if (typeof window === "undefined") return DEFAULT_PIN_HASH;
-  return localStorage.getItem(STORAGE_KEY_PIN_HASH) || DEFAULT_PIN_HASH;
-}
-
 // ─── Toast is now handled by the design-system DSToast component ──
 // (imported above)
 
@@ -70,24 +43,11 @@ function getStoredPinHash(): string {
 function AdminAuth({ onAuth }: { onAuth: () => void }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [lockoutTime, setLockoutTime] = useState<number>(0);
   const [isVerifying, setIsVerifying] = useState(false);
-
-  // Check lockout on mount and tick countdown
-  useEffect(() => {
-    const checkLockout = () => {
-      const lockoutUntil = parseInt(localStorage.getItem(STORAGE_KEY_LOCKOUT) || "0", 10);
-      const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
-      setLockoutTime(remaining);
-    };
-    checkLockout();
-    const interval = setInterval(checkLockout, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (lockoutTime > 0 || isVerifying || !pin.trim()) return;
+    if (isVerifying || !pin.trim()) return;
 
     setIsVerifying(true);
     setError(null);
@@ -100,47 +60,24 @@ function AdminAuth({ onAuth }: { onAuth: () => void }) {
         body: JSON.stringify({ pin }),
       });
 
-      const data = await res.json().catch(() => null);
+      const data = await res.json();
 
       if (res.ok && data?.success) {
-        localStorage.removeItem(STORAGE_KEY_ATTEMPTS);
-        localStorage.removeItem(STORAGE_KEY_LOCKOUT);
-        const sessionToken = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        sessionStorage.setItem(STORAGE_KEY_AUTH_TOKEN, sessionToken);
-        sessionStorage.setItem(STORAGE_KEY_AUTH_TIME, Date.now().toString());
         onAuth();
         setIsVerifying(false);
         return;
       }
 
-      // If server responded with unauthorized, record attempt
-      const currentAttempts = parseInt(localStorage.getItem(STORAGE_KEY_ATTEMPTS) || "0", 10) + 1;
-      localStorage.setItem(STORAGE_KEY_ATTEMPTS, currentAttempts.toString());
+      if (res.status !== 401) {
+        setError(data?.message || "Admin authentication is unavailable.");
+        return;
+      }
 
-      if (currentAttempts >= MAX_ATTEMPTS) {
-        const lockoutUntil = Date.now() + LOCKOUT_DURATION_MS;
-        localStorage.setItem(STORAGE_KEY_LOCKOUT, lockoutUntil.toString());
-        setLockoutTime(LOCKOUT_DURATION_MS / 1000);
-        setError(`Too many failed attempts. Security cooldown active for 60 seconds.`);
-      } else {
-        const remainingAttempts = MAX_ATTEMPTS - currentAttempts;
-        setError(`Incorrect PIN. ${remainingAttempts} attempt${remainingAttempts === 1 ? "" : "s"} left.`);
-      }
+      setError("Incorrect PIN. Try again.");
       setPin("");
-    } catch {
-      // Fallback local verification if server is unreachable
-      const enteredHash = await hashPin(pin);
-      const validHash = getStoredPinHash();
-      if (enteredHash === validHash) {
-        localStorage.removeItem(STORAGE_KEY_ATTEMPTS);
-        localStorage.removeItem(STORAGE_KEY_LOCKOUT);
-        const sessionToken = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-        sessionStorage.setItem(STORAGE_KEY_AUTH_TOKEN, sessionToken);
-        sessionStorage.setItem(STORAGE_KEY_AUTH_TIME, Date.now().toString());
-        onAuth();
-      } else {
-        setError("Invalid PIN or server unreachable.");
-      }
+    } catch (requestError) {
+      console.error("[Admin] Authentication request failed:", requestError);
+      setError("Could not reach the authentication service. Please try again.");
     } finally {
       setIsVerifying(false);
     }
@@ -161,40 +98,32 @@ function AdminAuth({ onAuth }: { onAuth: () => void }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="password"
-              maxLength={20}
+              maxLength={128}
               value={pin}
-              disabled={lockoutTime > 0}
               onChange={(e) => setPin(e.target.value)}
-              placeholder="Enter PIN"
+              placeholder="Enter admin passphrase"
               className={`w-full px-4 py-3 rounded-xl bg-fylter-darkest border text-center text-2xl tracking-[0.4em] font-bold text-fylter-offWhite placeholder:text-fylter-muted/40 placeholder:tracking-normal placeholder:text-sm placeholder:font-normal focus:outline-none focus:ring-2 transition-all ${
-                lockoutTime > 0
-                  ? "border-red-600/50 bg-red-950/20 opacity-60 cursor-not-allowed"
-                  : error
+                error
                   ? "border-red-500/60 focus:ring-red-500/30"
                   : "border-fylter-border/50 focus:ring-fylter-gold/40 focus:border-fylter-gold/60"
               }`}
               autoFocus
             />
 
-            {lockoutTime > 0 ? (
-              <p className="text-xs text-red-400 flex items-center justify-center gap-1.5 font-medium">
-                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                Locked out. Retry in {lockoutTime}s
-              </p>
-            ) : error ? (
+            {error ? (
               <p className="text-xs text-red-400 flex items-center justify-center gap-1.5 font-medium">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                 {error}
               </p>
             ) : (
               <p className="text-[11px] text-fylter-muted/70 flex items-center justify-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />Protected
+                    <ShieldCheck className="w-3 h-3 text-emerald-400" />Server-verified sign-in
               </p>
             )}
 
             <button
               type="submit"
-              disabled={lockoutTime > 0 || isVerifying || !pin}
+              disabled={isVerifying || !pin}
               className="w-full py-3 rounded-xl btn-3d-gold font-bold text-sm tracking-wider uppercase disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
             >
               {isVerifying ? "Verifying..." : "Unlock Dashboard"}
@@ -213,12 +142,7 @@ function AdminAuth({ onAuth }: { onAuth: () => void }) {
 }
 
 // ─── Category Options ─────────────────────────────────────────────
-const CATEGORIES = [
-  "Home & Living",
-  "Lifestyle & Wellness",
-  "Tech Accessories",
-  "Travel & Outdoor",
-] as const;
+const CATEGORIES = productCategories;
 
 const STOCK_OPTIONS = ["In Stock", "Low Stock", "Pre-Order"] as const;
 
@@ -227,6 +151,9 @@ export default function AdminPage() {
   const {
     siteSettings,
     products,
+    catalogStorage,
+    catalogError,
+    retryCatalogSync,
     updateSiteSettings,
     updateProduct,
     addProduct,
@@ -242,33 +169,26 @@ export default function AdminPage() {
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Check session auth and expiration
+  // Validate the server-signed session cookie before showing admin data.
   useEffect(() => {
-    const token = sessionStorage.getItem(STORAGE_KEY_AUTH_TOKEN);
-    const authTime = parseInt(sessionStorage.getItem(STORAGE_KEY_AUTH_TIME) || "0", 10);
-    const isLegacyAuth = sessionStorage.getItem("fylter_admin_auth") === "true";
-
-    if (token && authTime && Date.now() - authTime < SESSION_DURATION_MS) {
-      setIsAuthed(true);
-    } else if (isLegacyAuth && !token) {
-      // Migrate legacy sessions with new timestamp
-      sessionStorage.setItem(STORAGE_KEY_AUTH_TOKEN, "legacy_migrated");
-      sessionStorage.setItem(STORAGE_KEY_AUTH_TIME, Date.now().toString());
-      setIsAuthed(true);
-    } else {
-      // Session expired or invalid
-      sessionStorage.removeItem(STORAGE_KEY_AUTH_TOKEN);
-      sessionStorage.removeItem(STORAGE_KEY_AUTH_TIME);
-      sessionStorage.removeItem("fylter_admin_auth");
-      setIsAuthed(false);
-    }
+    let active = true;
+    void fetch("/api/admin/auth", { cache: "no-store" })
+      .then((response) => {
+        if (active) setIsAuthed(response.ok);
+      })
+      .catch((error: unknown) => {
+        console.error("[Admin] Session verification failed:", error);
+        if (active) setIsAuthed(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleLogout = () => {
-    fetch("/api/admin/auth", { method: "DELETE" }).catch(() => {});
-    sessionStorage.removeItem(STORAGE_KEY_AUTH_TOKEN);
-    sessionStorage.removeItem(STORAGE_KEY_AUTH_TIME);
-    sessionStorage.removeItem("fylter_admin_auth");
+    void fetch("/api/admin/auth", { method: "DELETE" }).catch((error: unknown) => {
+      console.error("[Admin] Could not end the server session:", error);
+    });
     setIsAuthed(false);
     setToast({ message: "Admin vault safely locked.", type: "success" });
   };
@@ -306,7 +226,8 @@ export default function AdminPage() {
       slug: `new-product-${Date.now()}`,
       sku: nextId.toUpperCase(),
       name: "New Product",
-      category: "Home & Living",
+      category: "Smart Everyday",
+      kidsCollection: false,
       price: 999,
       images: [],
       shortDescription: "Short description here...",
@@ -338,6 +259,16 @@ export default function AdminPage() {
 
   if (!isAuthed) {
     return <AdminAuth onAuth={() => setIsAuthed(true)} />;
+  }
+
+  if (catalogStorage === "loading") {
+    return (
+      <div className="min-h-screen bg-fylter-darkest flex items-center justify-center px-4">
+        <p className="text-sm font-medium text-fylter-muted" role="status" aria-live="polite">
+          Loading the product catalog…
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -440,6 +371,49 @@ export default function AdminPage() {
 
       {/* ─── Content Area ──────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20">
+        <div
+          className={`mb-5 rounded-xl border p-4 ${
+            catalogStorage === "shared"
+              ? "border-emerald-500/30 bg-emerald-950/20"
+              : catalogStorage === "saving"
+                ? "border-blue-400/30 bg-blue-950/20"
+                : "border-amber-400/40 bg-amber-950/20"
+          }`}
+          role={catalogStorage === "error" ? "alert" : "status"}
+          aria-live="polite"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-fylter-offWhite">
+                {catalogStorage === "shared"
+                  ? "Products are shared with your storefront"
+                  : catalogStorage === "saving"
+                    ? "Saving product changes…"
+                    : catalogStorage === "error"
+                      ? "Product sync needs attention"
+                      : "Browser-only product storage"}
+              </p>
+              <p className="mt-1 text-xs text-fylter-muted">
+                {catalogStorage === "shared"
+                  ? "Product edits are saved to the shared catalog."
+                  : catalogStorage === "saving"
+                    ? "Your latest changes are being synced for all visitors."
+                    : catalogStorage === "error"
+                      ? catalogError
+                      : "Edits only appear in this browser until Supabase is connected in Vercel."}
+              </p>
+            </div>
+            {catalogStorage !== "shared" && catalogStorage !== "saving" ? (
+              <button
+                type="button"
+                onClick={retryCatalogSync}
+                className="min-h-10 rounded-lg border border-fylter-border/60 px-4 text-xs font-semibold text-fylter-offWhite transition-colors hover:border-fylter-gold"
+              >
+                {catalogStorage === "error" ? "Retry connection" : "Check connection"}
+              </button>
+            ) : null}
+          </div>
+        </div>
         {activeTab === "site" && (
           <SiteSettingsPanel
             form={siteForm}
@@ -462,10 +436,7 @@ export default function AdminPage() {
           />
         )}
         {activeTab === "security" && (
-          <SecurityPanel
-            onLogout={handleLogout}
-            onNotify={(message, type) => setToast({ message, type })}
-          />
+          <SecurityPanel onLogout={handleLogout} />
         )}
       </div>
     </div>
@@ -475,82 +446,23 @@ export default function AdminPage() {
 // ─── Vault Security Panel ─────────────────────────────────────────
 function SecurityPanel({
   onLogout,
-  onNotify,
 }: {
   onLogout: () => void;
-  onNotify: (message: string, type: "success" | "error") => void;
 }) {
-  const [currentPin, setCurrentPin] = useState("");
-  const [newPin, setNewPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
-  const [isChangingPin, setIsChangingPin] = useState(false);
-  const [isCustomPinSet, setIsCustomPinSet] = useState(false);
-
-  useEffect(() => {
-    const hasCustom = !!localStorage.getItem(STORAGE_KEY_PIN_HASH);
-    setIsCustomPinSet(hasCustom);
-  }, []);
-
-  const handleChangePin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentPin || !newPin || !confirmPin) {
-      onNotify("Please fill in all PIN fields.", "error");
-      return;
-    }
-
-    if (newPin.length < 4) {
-      onNotify("New PIN must be at least 4 digits.", "error");
-      return;
-    }
-
-    if (newPin !== confirmPin) {
-      onNotify("New PIN and confirmation do not match.", "error");
-      return;
-    }
-
-    setIsChangingPin(true);
-    const enteredCurrentHash = await hashPin(currentPin);
-    const validCurrentHash = getStoredPinHash();
-
-    if (enteredCurrentHash !== validCurrentHash) {
-      onNotify("Current PIN is incorrect.", "error");
-      setIsChangingPin(false);
-      return;
-    }
-
-    const newHash = await hashPin(newPin);
-    localStorage.setItem(STORAGE_KEY_PIN_HASH, newHash);
-    setIsCustomPinSet(true);
-    setCurrentPin("");
-    setNewPin("");
-    setConfirmPin("");
-    setIsChangingPin(false);
-    onNotify("Admin PIN successfully updated and encrypted!", "success");
-  };
-
-  const handleResetToDefaultPin = async () => {
-    if (confirm("Reset admin PIN back to default (1234)?")) {
-      localStorage.removeItem(STORAGE_KEY_PIN_HASH);
-      setIsCustomPinSet(false);
-      onNotify("PIN reset to factory default (1234).", "success");
-    }
-  };
-
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Security Status Overview */}
       <div className="p-6 rounded-2xl glass-panel border border-fylter-gold/30">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 mb-3">
               <ShieldCheck className="w-3.5 h-3.5" />
-              Vault Armed & Protected
+              Server-verified session
             </span>
             <h3 className="text-xl font-extrabold text-fylter-offWhite tracking-tight">
-              Administrative Access & Security Health
+              Admin access settings
             </h3>
             <p className="text-xs text-fylter-muted mt-1 leading-relaxed">
-              Your admin session is encrypted, protected by client-side SHA-256 salted PIN hashing, brute-force rate-limiting, and auto-expiring session credentials.
+              Admin access is checked by the server and expires after two hours. Keep your deployment secrets private.
             </p>
           </div>
           <button
@@ -561,106 +473,12 @@ function SecurityPanel({
             <span>Lock Session Now</span>
           </button>
         </div>
-
-        {/* Security Matrix */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-fylter-border/30">
-          <div className="p-4 rounded-xl bg-fylter-darkest/60 border border-fylter-border/30">
-            <span className="text-[11px] text-fylter-muted uppercase font-semibold block">PIN Protection</span>
-            <span className="text-sm font-bold text-fylter-offWhite mt-1 flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-fylter-gold" />
-              {isCustomPinSet ? "Custom Secret Active" : "Default PIN (1234)"}
-            </span>
-            <p className="text-[11px] text-fylter-muted mt-1">
-              {isCustomPinSet ? "Encrypted with SHA-256 salt" : "Please set a custom PIN below"}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-fylter-darkest/60 border border-fylter-border/30">
-            <span className="text-[11px] text-fylter-muted uppercase font-semibold block">Brute-Force Guard</span>
-            <span className="text-sm font-bold text-emerald-400 mt-1 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" />
-              Active (5 strikes / 60s freeze)
-            </span>
-            <p className="text-[11px] text-fylter-muted mt-1">Prevents credential guessing attacks</p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-fylter-darkest/60 border border-fylter-border/30">
-            <span className="text-[11px] text-fylter-muted uppercase font-semibold block">Session Expiration</span>
-            <span className="text-sm font-bold text-fylter-offWhite mt-1 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-fylter-gold" />
-              2 Hours Auto-Timeout
-            </span>
-            <p className="text-[11px] text-fylter-muted mt-1">Automatic closure when inactive</p>
-          </div>
+        <div className="mt-6 border-t border-fylter-border/30 pt-5">
+          <h4 className="text-sm font-bold text-fylter-offWhite">Change the admin PIN</h4>
+          <p className="mt-1 text-xs leading-relaxed text-fylter-muted">
+            Update the ADMIN_PIN environment variable in Vercel, then redeploy. Never use a default or easily guessed PIN.
+          </p>
         </div>
-      </div>
-
-      {/* Change PIN Form */}
-      <div className="p-6 rounded-2xl glass-panel border border-fylter-border/40">
-        <h3 className="text-base font-bold text-fylter-offWhite mb-2 flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-fylter-gold" />
-          Update Admin Security PIN
-        </h3>
-        <p className="text-xs text-fylter-muted mb-6">
-          Change your dashboard passcode. The new passcode is salted and encrypted using Web Crypto SHA-256 before being stored.
-        </p>
-
-        <form onSubmit={handleChangePin} className="space-y-4 max-w-lg">
-          <div>
-            <FieldLabel icon={Lock} label="Current PIN" />
-            <input
-              type="password"
-              value={currentPin}
-              onChange={(e) => setCurrentPin(e.target.value)}
-              placeholder="Enter current PIN"
-              className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite placeholder:text-fylter-muted/40 focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <FieldLabel icon={KeyRound} label="New PIN" />
-              <input
-                type="password"
-                value={newPin}
-                onChange={(e) => setNewPin(e.target.value)}
-                placeholder="At least 4 characters"
-                className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite placeholder:text-fylter-muted/40 focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50"
-              />
-            </div>
-            <div>
-              <FieldLabel icon={KeyRound} label="Confirm New PIN" />
-              <input
-                type="password"
-                value={confirmPin}
-                onChange={(e) => setConfirmPin(e.target.value)}
-                placeholder="Re-enter new PIN"
-                className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite placeholder:text-fylter-muted/40 focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-4 pt-3 flex-wrap">
-            {isCustomPinSet ? (
-              <button
-                type="button"
-                onClick={handleResetToDefaultPin}
-                className="text-xs text-fylter-muted hover:text-red-400 transition-colors flex items-center gap-1.5"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Reset PIN to Default (1234)
-              </button>
-            ) : <span />}
-
-            <button
-              type="submit"
-              disabled={isChangingPin || !currentPin || !newPin || !confirmPin}
-              className="px-6 py-2.5 rounded-lg btn-3d-gold text-xs font-bold tracking-wider uppercase disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {isChangingPin ? "Encrypting..." : "Update Security PIN"}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );
@@ -751,7 +569,7 @@ function SiteSettingsPanel({
           </div>
           <div>
             <FieldLabel icon={Tag} label="Tagline" />
-            <TextInput value={form.tagline} onChange={(v) => update("tagline", v)} placeholder="Purely Filters" />
+            <TextInput value={form.tagline} onChange={(v) => update("tagline", v)} placeholder="Little finds, big happy" />
           </div>
           <div className="md:col-span-2">
             <FieldLabel icon={Tag} label="Description" />
@@ -1009,6 +827,26 @@ function ProductsPanel({
                   </select>
                 </div>
               </div>
+
+              <section className="rounded-xl border border-fylter-gold/40 bg-fylter-gold/10 p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h5 className="text-sm font-bold text-fylter-offWhite">Storefront collections</h5>
+                    <p className="mt-1 text-xs text-fylter-muted">
+                      Choose where this product appears. Turn on Kids Corner to show it in the Kids section.
+                    </p>
+                  </div>
+                  <label className="inline-flex min-h-11 items-center gap-3 rounded-lg border border-fylter-gold/40 bg-fylter-darkest/60 px-4 py-2.5 text-sm font-semibold text-fylter-offWhite cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={product.kidsCollection ?? false}
+                      onChange={(e) => onFieldChange(product.id, "kidsCollection", e.target.checked)}
+                      className="h-5 w-5 accent-fylter-gold"
+                    />
+                    <span>Show in Kids Corner</span>
+                  </label>
+                </div>
+              </section>
 
               {/* Pricing */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
