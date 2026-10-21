@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAdmin } from "@/context/AdminContext";
 import type { SiteConfig } from "@/config/site";
-import { productCategories, type Product, type ProductVariant } from "@/data/products";
+import { getProductPath, productCategories, type Product, type ProductVariant } from "@/data/products";
 import Link from "next/link";
 import { Toast as DSToast, Badge, Card } from "@/components/ui";
 import {
@@ -1030,7 +1030,7 @@ function ProductsPanel({
               {/* Delete */}
               <div className="pt-4 border-t border-fylter-border/30 flex items-center justify-between">
                 <Link
-                  href={`/products/${product.slug}`}
+                  href={getProductPath(product)}
                   className="text-xs text-fylter-muted hover:text-fylter-gold flex items-center gap-1.5 transition-colors"
                 >
                   <Eye className="w-3.5 h-3.5" />

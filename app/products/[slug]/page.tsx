@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getProductBySlug, getRelatedProducts } from "@/data/products";
+import { getProductBySlug, getProductPath, getRelatedProducts } from "@/data/products";
 import { siteConfig, getWhatsAppOrderUrl, getWhatsAppSupportUrl } from "@/config/site";
 import { useAdmin } from "@/context/AdminContext";
 import ProductCard from "@/components/ProductCard";
@@ -30,7 +30,12 @@ export default function ProductDetailPage({
   params: { slug: string };
 }) {
   const { products: contextProducts, siteSettings, catalogStorage } = useAdmin();
-  const product = contextProducts.find((p) => p.slug === params.slug) || getProductBySlug(params.slug);
+  const product =
+    contextProducts.find((p) => p.slug === params.slug) ||
+    (catalogStorage !== "loading"
+      ? contextProducts.find((p) => p.id === params.slug)
+      : undefined) ||
+    getProductBySlug(params.slug);
 
   // State
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -78,7 +83,7 @@ export default function ProductDetailPage({
     .map(([key, value]) => `${key}: ${value}`)
     .join(", ");
 
-  const productUrl = `${siteSettings.url || siteConfig.url}/products/${product.slug}`;
+  const productUrl = `${siteSettings.url || siteConfig.url}${getProductPath(product)}`;
 
   // WhatsApp order link with dynamic details
   const whatsappOrderUrl = getWhatsAppOrderUrl({

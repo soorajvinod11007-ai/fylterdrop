@@ -47,6 +47,11 @@ export interface Product {
   reviewsCount?: number;
 }
 
+export function getProductPath(product: Pick<Product, "id" | "slug">): string {
+  const identifier = product.slug.trim() || product.id.trim();
+  return `/products/${encodeURIComponent(identifier)}`;
+}
+
 export const products: Product[] = [
   {
     id: "fyl-001",

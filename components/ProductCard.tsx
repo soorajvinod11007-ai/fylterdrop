@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Product } from "@/data/products";
+import { getProductPath, type Product } from "@/data/products";
 import { getWhatsAppOrderUrl, siteConfig } from "@/config/site";
 import { useAdmin } from "@/context/AdminContext";
 import { ArrowUpRight, MessageCircle, Star } from "lucide-react";
@@ -14,12 +14,13 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { siteSettings } = useAdmin();
+  const productPath = getProductPath(product);
   const whatsappUrl = getWhatsAppOrderUrl({
     productName: product.name,
     sku: product.sku,
     price: product.price,
     selectedVariant: product.variants?.[0]?.values?.[0],
-    productUrl: `${siteSettings.url || siteConfig.url}/products/${product.slug}`,
+    productUrl: `${siteSettings.url || siteConfig.url}${productPath}`,
     whatsappNumber: siteSettings.whatsappNumber,
     brandName: siteSettings.name,
   });
@@ -27,7 +28,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <article className="discovery-card">
       <Link
-        href={`/products/${product.slug}`}
+        href={productPath}
         className="discovery-card__image"
         aria-label={`View ${product.name}`}
       >
@@ -52,7 +53,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <div className="discovery-card__body">
         <div className="discovery-card__copy">
-          <Link href={`/products/${product.slug}`} className="discovery-card__title">
+          <Link href={productPath} className="discovery-card__title">
             {product.name}
           </Link>
           <p>{product.shortDescription}</p>
@@ -75,7 +76,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <MessageCircle aria-hidden="true" />
             </a>
             <Link
-              href={`/products/${product.slug}`}
+              href={productPath}
               className="discovery-card__action discovery-card__action--details"
               aria-label={`See details for ${product.name}`}
             >
