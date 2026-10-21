@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -29,27 +29,49 @@ export default function ProductDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const { products: contextProducts, siteSettings } = useAdmin();
+  const { products: contextProducts, siteSettings, catalogStorage } = useAdmin();
   const product = contextProducts.find((p) => p.slug === params.slug) || getProductBySlug(params.slug);
-
-  if (!product) {
-    notFound();
-  }
 
   // State
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>(() => {
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [copiedSku, setCopiedSku] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  useEffect(() => {
     const initial: Record<string, string> = {};
-    if (product.variants) {
+    if (product?.variants) {
       product.variants.forEach((v) => {
         if (v.values.length > 0) initial[v.name] = v.values[0];
       });
     }
-    return initial;
-  });
-  const [copiedSku, setCopiedSku] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    setSelectedVariants(initial);
+  }, [product]);
+
+  if (!product && catalogStorage === "loading") {
+    return (
+      <div className="min-h-[75vh] bg-fylter-darkest flex items-center justify-center px-4">
+        <p className="text-sm font-medium text-fylter-muted" role="status" aria-live="polite">
+          Loading product…
+        </p>
+      </div>
+    );
+  }
+
+  if (!product && catalogStorage === "error") {
+    return (
+      <div className="min-h-[75vh] bg-fylter-darkest flex items-center justify-center px-4">
+        <p className="text-sm font-medium text-fylter-muted" role="alert">
+          The product catalog is temporarily unavailable. Please try again later.
+        </p>
+      </div>
+    );
+  }
+
+  if (!product) {
+    notFound();
+  }
 
   // Variant string for WhatsApp message
   const variantString = Object.entries(selectedVariants)
