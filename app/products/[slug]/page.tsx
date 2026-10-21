@@ -460,7 +460,7 @@ export default function ProductDetailPage({
         <div className="flex items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-[10px] text-fylter-muted uppercase tracking-wider font-semibold">Total Price</span>
-            <span className="text-lg font-extrabold text-fylter-offWhite leading-tight">
+            <span className="sticky-product-price">
               ₹{product.price.toLocaleString("en-IN")}
             </span>
           </div>
