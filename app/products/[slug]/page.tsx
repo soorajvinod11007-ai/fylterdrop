@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { getProductPath } from "@/data/products";
 import {
   siteConfig,
@@ -29,16 +29,13 @@ import {
   Share2
 } from "lucide-react";
 
-export default function ProductDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+export default function ProductDetailPage() {
+  const { slug } = useParams<{ slug: string }>();
   const { products: contextProducts, siteSettings, catalogStorage } = useAdmin();
   const product =
-    contextProducts.find((p) => p.slug === params.slug) ||
+    contextProducts.find((p) => p.slug === slug) ||
     (catalogStorage !== "loading"
-      ? contextProducts.find((p) => p.id === params.slug)
+      ? contextProducts.find((p) => p.id === slug)
       : undefined);
 
   // State
