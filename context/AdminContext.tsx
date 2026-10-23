@@ -124,7 +124,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           localCatalogIsValid.current = true;
           setProducts(sharedProducts);
           sharedCatalogAvailable.current = true;
-          productsDirty.current = false;
+          productsDirty.current = JSON.stringify(data.products) !== JSON.stringify(sharedProducts);
           setCatalogStorage("shared");
           setCatalogError(null);
         } else {
@@ -257,7 +257,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         localCatalogIsValid.current = true;
         setProducts(sharedProducts);
         sharedCatalogAvailable.current = true;
-        productsDirty.current = false;
+        productsDirty.current = JSON.stringify(data.products) !== JSON.stringify(sharedProducts);
         setCatalogStorage("shared");
         setCatalogError(null);
       })
