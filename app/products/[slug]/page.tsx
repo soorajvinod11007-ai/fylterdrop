@@ -4,8 +4,13 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getProductBySlug, getProductPath, getRelatedProducts } from "@/data/products";
-import { siteConfig, getWhatsAppOrderUrl, getWhatsAppSupportUrl } from "@/config/site";
+import { getProductPath } from "@/data/products";
+import {
+  siteConfig,
+  shippingPolicy,
+  getWhatsAppOrderUrl,
+  getWhatsAppSupportUrl,
+} from "@/config/site";
 import { useAdmin } from "@/context/AdminContext";
 import ProductCard from "@/components/ProductCard";
 import { Badge, Modal } from "@/components/ui";
@@ -34,8 +39,7 @@ export default function ProductDetailPage({
     contextProducts.find((p) => p.slug === params.slug) ||
     (catalogStorage !== "loading"
       ? contextProducts.find((p) => p.id === params.slug)
-      : undefined) ||
-    getProductBySlug(params.slug);
+      : undefined);
 
   // State
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -109,7 +113,17 @@ export default function ProductDetailPage({
     }
   };
 
-  const relatedProducts = getRelatedProducts(product.slug, product.category, 4);
+  const relatedProducts = contextProducts
+    .filter(
+      (candidate) =>
+        candidate.id !== product.id &&
+        candidate.slug !== product.slug &&
+        candidate.category === product.category,
+    )
+    .slice(0, 4);
+  const comboProducts = product.isCombo
+    ? contextProducts.filter((candidate) => product.comboProductIds?.includes(candidate.id))
+    : [];
 
   return (
     <div className="min-h-screen bg-fylter-darkest pb-24 sm:pb-28">
@@ -198,7 +212,7 @@ export default function ProductDetailPage({
               <div className="p-3 rounded-xl bg-fylter-secondary/20 border border-fylter-border/30">
                 <Truck className="w-5 h-5 text-fylter-gold mx-auto mb-1.5" />
                 <span className="text-xs font-medium text-fylter-offWhite block">Pan-India Express</span>
-                <span className="text-[10px] text-fylter-muted block">3–5 Business Days</span>
+                <span className="text-[10px] text-fylter-muted block">{shippingPolicy.deliveryTime}</span>
               </div>
               <div className="p-3 rounded-xl bg-fylter-secondary/20 border border-fylter-border/30">
                 <ShieldCheck className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
@@ -335,6 +349,11 @@ export default function ProductDetailPage({
 
             {/* Direct Social Order Call to Actions */}
             <div className="space-y-3.5 pt-5 border-t border-fylter-border/30">
+              <p className="text-center text-xs text-fylter-muted">
+                Free shipping on orders ₹{shippingPolicy.freeShippingMinimum} and above.
+                Orders below ₹{shippingPolicy.freeShippingMinimum} have a ₹{shippingPolicy.lowOrderHandlingCharge} handling charge.
+                COD adds ₹{shippingPolicy.cashOnDeliveryCharge}.
+              </p>
               {/* PRIMARY CTA: ORDER ON WHATSAPP (3D Physical Button) */}
               <a
                 href={whatsappOrderUrl}
@@ -423,6 +442,22 @@ export default function ProductDetailPage({
             </p>
           </div>
         </div>
+
+        {product.isCombo && comboProducts.length > 0 && (
+          <section className="mt-16 pt-12 border-t border-fylter-border/30">
+            <div className="mb-8">
+              <span className="section-label">Included in this combo</span>
+              <h2 className="mt-2 text-2xl font-extrabold text-fylter-offWhite">
+                {comboProducts.length} {comboProducts.length === 1 ? "product" : "products"}, one bundle
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              {comboProducts.map((comboProduct) => (
+                <ProductCard key={comboProduct.id} product={comboProduct} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ==================================================
             RELATED PRODUCTS

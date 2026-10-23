@@ -39,6 +39,13 @@ export const siteConfig: SiteConfig = {
   operatingHours: "10:00 AM – 8:00 PM IST (Mon–Sat)",
 };
 
+export const shippingPolicy = {
+  freeShippingMinimum: 300,
+  deliveryTime: "4–7 days",
+  cashOnDeliveryCharge: 25,
+  lowOrderHandlingCharge: 30,
+} as const;
+
 /**
  * Generate a pre-filled WhatsApp ordering URL with product metadata.
  */

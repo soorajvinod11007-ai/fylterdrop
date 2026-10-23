@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { siteConfig, getWhatsAppSupportUrl } from "@/config/site";
+import { siteConfig, getWhatsAppSupportUrl, shippingPolicy } from "@/config/site";
 import { ChevronDown, MessageCircle, Instagram, HelpCircle, Sparkles } from "lucide-react";
 
 export default function FAQPage() {
@@ -23,11 +23,11 @@ export default function FAQPage() {
     },
     {
       q: "What payment methods do you accept once we connect?",
-      a: "Once we confirm your order details on WhatsApp or Instagram, you can pay easily via any standard Indian payment mode: UPI (Google Pay, PhonePe, Paytm, BHIM), Direct IMPS/NEFT Bank Transfer, or Cash on Delivery (COD) for eligible pin codes."
+      a: `Once we confirm your order details on WhatsApp or Instagram, you can pay easily via any standard Indian payment mode: UPI (Google Pay, PhonePe, Paytm, BHIM), Direct IMPS/NEFT Bank Transfer, or Cash on Delivery (COD) for eligible pin codes. COD adds a ₹${shippingPolicy.cashOnDeliveryCharge} charge.`
     },
     {
       q: "What are the shipping charges and delivery timelines?",
-      a: "We offer FREE standard express shipping across India on all orders above ₹999. Orders below ₹999 incur a flat ₹79 delivery fee. Most metro deliveries take 2–4 business days, while rest-of-India destinations typically arrive in 3–6 business days with door-to-door tracking."
+      a: `Orders of ₹${shippingPolicy.freeShippingMinimum} and above get free shipping across India. Orders below ₹${shippingPolicy.freeShippingMinimum} have a ₹${shippingPolicy.lowOrderHandlingCharge} handling charge. Cash on Delivery adds ₹${shippingPolicy.cashOnDeliveryCharge}. Delivery typically takes ${shippingPolicy.deliveryTime} with tracking.`
     },
     {
       q: "What if I receive a damaged or malfunctioning product?",

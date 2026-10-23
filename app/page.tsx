@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import { useAdmin } from "@/context/AdminContext";
-import { categoryMeta } from "@/data/products";
+import { categoryMeta, getProductPath } from "@/data/products";
 import { ArrowRight, Baby, Gift, Palette, Sparkles, Zap } from "lucide-react";
 
 type HomeMode = "discover" | "kids";
@@ -17,12 +17,21 @@ const categoryDetails = [
 ];
 
 export default function HomePage() {
-  const { products } = useAdmin();
+  const { products, catalogStorage } = useAdmin();
   const [mode, setMode] = useState<HomeMode>("discover");
   const kidsProducts = products.filter((product) => product.kidsCollection);
   const heroProduct =
     mode === "kids" ? kidsProducts[0] : products.find((product) => product.featured) ?? products[0];
-  const heroImage = heroProduct?.images[0] || categoryMeta[0].image;
+
+  if (catalogStorage === "loading") {
+    return (
+      <div className="homepage flex min-h-[60vh] items-center justify-center">
+        <p className="text-sm font-medium text-fylter-muted" role="status" aria-live="polite">
+          Loading the latest collection…
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="homepage">
@@ -63,8 +72,25 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className={`home-hero__visual ${mode === "kids" && !kidsProducts.length ? "home-hero__visual--kids" : ""}`}>
-              {mode === "kids" && !kidsProducts.length ? (
+            <Link
+              href={heroProduct ? getProductPath(heroProduct) : "/shop"}
+              className={`home-hero__visual ${
+                (mode === "kids" && !kidsProducts.length) || !heroProduct?.images[0]
+                  ? "home-hero__visual--kids"
+                  : ""
+              }`}
+              aria-label={heroProduct ? `View ${heroProduct.name}` : "Browse the shop"}
+            >
+              {heroProduct?.images[0] ? (
+                <Image
+                  src={heroProduct.images[0]}
+                  alt={heroProduct.name}
+                  fill
+                  priority
+                  sizes="(max-width: 960px) 100vw, 52vw"
+                  className="home-hero__image"
+                />
+              ) : (
                 <div className="home-kids-art">
                   <span className="home-kids-art__sparkle home-kids-art__sparkle--one" aria-hidden="true">
                     <Sparkles />
@@ -73,19 +99,14 @@ export default function HomePage() {
                     <Sparkles />
                   </span>
                   <span className="home-kids-art__icon" aria-hidden="true">
-                    <Baby />
+                    {mode === "kids" ? <Baby /> : <Sparkles />}
                   </span>
-                  <strong>Little things<br />for little wonders</strong>
+                  <strong>
+                    {mode === "kids"
+                      ? <>Little things<br />for little wonders</>
+                      : <>Your next favourite<br />is on its way</>}
+                  </strong>
                 </div>
-              ) : (
-                <Image
-                  src={heroImage}
-                  alt={heroProduct?.name || "A cozy desk ready for creative moments"}
-                  fill
-                  priority
-                  sizes="(max-width: 960px) 100vw, 52vw"
-                  className="home-hero__image"
-                />
               )}
               <span className="home-hero__stamp" aria-hidden="true">
                 {mode === "kids" ? "A little joy for little people" : "Picked with a little love"}
@@ -103,7 +124,7 @@ export default function HomePage() {
                   <Sparkles />
                 </span>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
@@ -131,12 +152,14 @@ export default function HomePage() {
                       href={`/shop?category=${encodeURIComponent(category.name)}`}
                       className={`discovery-category discovery-category--${details.color}`}
                     >
-                      <Image
-                        src={categoryItems[0]?.images[0] || category.image}
-                        alt=""
-                        fill
-                        sizes="(max-width: 640px) 90vw, (max-width: 960px) 50vw, 33vw"
-                      />
+                      {categoryItems[0]?.images[0] && (
+                        <Image
+                          src={categoryItems[0].images[0]}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 90vw, (max-width: 960px) 50vw, 33vw"
+                        />
+                      )}
                       <span className="discovery-category__sticker" aria-hidden="true">
                         <CategoryIcon />
                       </span>

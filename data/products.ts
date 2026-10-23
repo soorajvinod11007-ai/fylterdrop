@@ -8,6 +8,7 @@
  * 4. Set `kidsCollection: true` to include the product in the Kids Corner.
  * 5. Set `trending: true` for the trending shop filter.
  * 6. Set `newArrival: true` to display under New Arrivals.
+ * 7. Set `isCombo: true` and list product IDs in `comboProductIds` for a combo offer.
  */
 
 export interface ProductVariant {
@@ -30,6 +31,8 @@ export interface Product {
   name: string;
   category: ProductCategory;
   kidsCollection?: boolean;
+  isCombo?: boolean;
+  comboProductIds?: string[];
   price: number;
   oldPrice?: number;
   discount?: number; // percentage

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdmin } from "@/context/AdminContext";
-import { getWhatsAppSupportUrl } from "@/config/site";
+import { getWhatsAppSupportUrl, shippingPolicy } from "@/config/site";
 import { Instagram, Menu, MessageCircle, Search, X } from "lucide-react";
 
 const navLinks = [
@@ -44,7 +44,11 @@ export default function Navbar() {
         <span className="site-announcement__mark" aria-hidden="true" />
         <span>Little things for a lovelier everyday</span>
         <span className="site-announcement__divider" aria-hidden="true">/</span>
-        <span>Free shipping across India over ₹999</span>
+        <span>
+          Free shipping on orders ₹{shippingPolicy.freeShippingMinimum}+
+          {" · "}Delivery {shippingPolicy.deliveryTime}
+          {" · "}COD charge ₹{shippingPolicy.cashOnDeliveryCharge}
+        </span>
       </div>
       <header className={`site-nav glass-nav ${isScrolled ? "site-nav--scrolled" : ""}`}>
         <div className="site-nav__inner">

@@ -22,8 +22,11 @@ export function createAdminSession(): string | null {
 }
 
 export function hasValidAdminSession(request: NextRequest): boolean {
+  return isValidAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
+}
+
+export function isValidAdminSession(session: string | undefined): boolean {
   const secret = getSessionSecret();
-  const session = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   if (!secret || !session) return false;
 
   const [token, expiresAtValue, signature, ...extra] = session.split(".");
@@ -34,6 +37,17 @@ export function hasValidAdminSession(request: NextRequest): boolean {
   const expected = createHmac("sha256", secret).update(`${token}.${expiresAtValue}`).digest();
   const supplied = Buffer.from(signature, "hex");
   return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+}
+
+export function hasSameOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+
+  try {
+    return new URL(origin).origin === request.nextUrl.origin;
+  } catch {
+    return false;
+  }
 }
 
 export function hashAdminLoginAddress(address: string): string | null {

@@ -1837,11 +1837,17 @@
 
 .home-hero__visual {
   min-height: clamp(340px, 39vw, 510px);
+  display: block;
   border: 8px solid #fffefd;
   border-radius: 42px 42px 120px 42px;
   background: #ead7e9;
   box-shadow: 0 20px 48px rgba(89, 57, 91, 0.14);
   transform: rotate(1.2deg);
+}
+
+.home-hero__visual:focus-visible {
+  outline: 3px solid #d85879;
+  outline-offset: 5px;
 }
 
 .home-hero__visual img {

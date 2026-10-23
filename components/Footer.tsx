@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAdmin } from "@/context/AdminContext";
-import { getWhatsAppSupportUrl } from "@/config/site";
+import { getWhatsAppSupportUrl, shippingPolicy } from "@/config/site";
 import { MessageCircle, Instagram, ShieldCheck, Truck, RefreshCw, Sparkles } from "lucide-react";
 
 export default function Footer() {
@@ -215,6 +215,11 @@ export default function Footer() {
 
             <div className="pt-2 text-xs text-fylter-muted/80 leading-relaxed border-t border-fylter-border/20">
               <span className="font-semibold text-fylter-paleGold">Direct Order Model:</span> We do not collect credit cards or bank credentials on this website. All orders are confirmed personally with our team on WhatsApp or Instagram.
+            </div>
+            <div className="text-xs text-fylter-muted/80 leading-relaxed">
+              Free shipping on orders ₹{shippingPolicy.freeShippingMinimum} and above.
+              Orders below ₹{shippingPolicy.freeShippingMinimum} have a ₹{shippingPolicy.lowOrderHandlingCharge} handling charge.
+              COD has an additional ₹{shippingPolicy.cashOnDeliveryCharge} charge. Delivery takes {shippingPolicy.deliveryTime}.
             </div>
           </div>
         </div>

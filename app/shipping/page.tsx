@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Truck, ShieldCheck, Clock, MapPin } from "lucide-react";
+import { shippingPolicy } from "@/config/site";
 
 export const metadata = {
   title: "Shipping Information",
@@ -24,21 +25,33 @@ export default function ShippingPage() {
         </div>
 
         {/* Highlights */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
           <div className="p-5 rounded-xl bg-fylter-secondary/40 border border-fylter-border/40">
             <Truck className="w-5 h-5 text-fylter-gold mb-2" />
             <h3 className="text-sm font-bold text-fylter-offWhite">Free Express Shipping</h3>
-            <p className="text-xs text-fylter-muted mt-1">All orders above ₹999 qualify for complimentary shipping.</p>
+            <p className="text-xs text-fylter-muted mt-1">
+              Orders of ₹{shippingPolicy.freeShippingMinimum} and above qualify for free shipping.
+            </p>
           </div>
           <div className="p-5 rounded-xl bg-fylter-secondary/40 border border-fylter-border/40">
             <Clock className="w-5 h-5 text-fylter-gold mb-2" />
-            <h3 className="text-sm font-bold text-fylter-offWhite">2–5 Business Days</h3>
-            <p className="text-xs text-fylter-muted mt-1">Metro deliveries arrive in 2–4 days, rest of India in 3–6 days.</p>
+            <h3 className="text-sm font-bold text-fylter-offWhite">{shippingPolicy.deliveryTime} Delivery</h3>
+            <p className="text-xs text-fylter-muted mt-1">
+              Delivery typically takes {shippingPolicy.deliveryTime} across India.
+            </p>
           </div>
           <div className="p-5 rounded-xl bg-fylter-secondary/40 border border-fylter-border/40">
             <ShieldCheck className="w-5 h-5 text-emerald-400 mb-2" />
             <h3 className="text-sm font-bold text-fylter-offWhite">Insured Transit</h3>
             <p className="text-xs text-fylter-muted mt-1">Every package is securely sealed and insured against transit damages.</p>
+          </div>
+          <div className="p-5 rounded-xl bg-fylter-secondary/40 border border-fylter-border/40">
+            <MapPin className="w-5 h-5 text-fylter-gold mb-2" />
+            <h3 className="text-sm font-bold text-fylter-offWhite">Order Charges</h3>
+            <p className="text-xs text-fylter-muted mt-1">
+              Orders below ₹{shippingPolicy.freeShippingMinimum} have a ₹{shippingPolicy.lowOrderHandlingCharge} handling charge.
+              Cash on Delivery adds ₹{shippingPolicy.cashOnDeliveryCharge}.
+            </p>
           </div>
         </div>
 
@@ -60,12 +73,19 @@ export default function ShippingPage() {
           <section className="space-y-2">
             <h2 className="text-lg font-bold text-fylter-offWhite">3. Delivery Fees</h2>
             <p>
-              Orders totaling ₹999 or more enjoy completely free doorstep delivery across India. For orders below ₹999, a nominal flat rate of ₹79 is applied to cover courier freight.
+              Orders totaling ₹{shippingPolicy.freeShippingMinimum} or more qualify for free doorstep shipping across India. Orders below ₹{shippingPolicy.freeShippingMinimum} have a ₹{shippingPolicy.lowOrderHandlingCharge} handling charge. Cash on Delivery orders have an additional ₹{shippingPolicy.cashOnDeliveryCharge} COD charge.
             </p>
           </section>
 
           <section className="space-y-2">
-            <h2 className="text-lg font-bold text-fylter-offWhite">4. Damaged or Tampered Parcels</h2>
+            <h2 className="text-lg font-bold text-fylter-offWhite">4. Cash on Delivery</h2>
+            <p>
+              Cash on Delivery is available for eligible orders and pin codes and adds a ₹{shippingPolicy.cashOnDeliveryCharge} charge to the order.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-lg font-bold text-fylter-offWhite">5. Damaged or Tampered Parcels</h2>
             <p>
               If your parcel appears visibly torn or tampered upon arrival, please take a quick photo before opening and notify our team on WhatsApp within 24 hours. We will initiate an immediate replacement dispatch.
             </p>

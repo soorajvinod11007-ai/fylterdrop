@@ -56,6 +56,11 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Link href={productPath} className="discovery-card__title">
             {product.name}
           </Link>
+          {product.isCombo && (
+            <span className="inline-flex w-fit rounded-full bg-fylter-gold/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-fylter-gold">
+              Combo · {product.comboProductIds?.length ?? 0} items
+            </span>
+          )}
           <p>{product.shortDescription}</p>
         </div>
         <div className="discovery-card__purchase">

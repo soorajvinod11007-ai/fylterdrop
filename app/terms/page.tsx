@@ -1,5 +1,5 @@
 import React from "react";
-import { siteConfig } from "@/config/site";
+import { shippingPolicy, siteConfig } from "@/config/site";
 
 export const metadata = {
   title: "Terms & Conditions",
@@ -40,7 +40,7 @@ export default function TermsPage() {
           <section className="space-y-2">
             <h2 className="text-lg font-bold text-fylter-offWhite">3. Pricing & Payment</h2>
             <p>
-              All prices listed on the website are in Indian Rupees (INR) and inclusive of applicable goods and services taxes. Delivery fees, where applicable, are disclosed before order finalization. Payments are made through standard Indian channels (UPI, Bank Transfer, or COD) as mutually confirmed on WhatsApp.
+              All prices listed on the website are in Indian Rupees (INR) and inclusive of applicable goods and services taxes. Orders of ₹{shippingPolicy.freeShippingMinimum} and above qualify for free shipping; orders below ₹{shippingPolicy.freeShippingMinimum} have a ₹{shippingPolicy.lowOrderHandlingCharge} handling charge. Cash on Delivery, where available, adds ₹{shippingPolicy.cashOnDeliveryCharge}. Delivery typically takes {shippingPolicy.deliveryTime}. Payments are confirmed with our team on WhatsApp.
             </p>
           </section>
 

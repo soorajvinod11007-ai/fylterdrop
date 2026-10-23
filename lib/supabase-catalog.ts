@@ -1,4 +1,4 @@
-import { products as defaultProducts, type Product } from "@/data/products";
+import type { Product } from "@/data/products";
 
 const CATALOG_ROW_ID = "main";
 
@@ -43,8 +43,7 @@ export async function readSharedCatalog(): Promise<Product[]> {
     return rows[0].products;
   }
 
-  await writeSharedCatalog(defaultProducts);
-  return defaultProducts;
+  return [];
 }
 
 export async function writeSharedCatalog(products: Product[]): Promise<void> {
