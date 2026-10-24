@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
+import HeroParallaxDemo from "@/components/hero-parallax-demo";
 import { useAdmin } from "@/context/AdminContext";
-import { categoryMeta, getProductPath } from "@/data/products";
+import { categoryMeta, getProductPath, type Product } from "@/data/products";
 import { ArrowRight, Baby, Gift, Palette, Sparkles, Zap } from "lucide-react";
 
 type HomeMode = "discover" | "kids";
@@ -20,8 +21,8 @@ export default function HomePage() {
   const { products, catalogStorage } = useAdmin();
   const [mode, setMode] = useState<HomeMode>("discover");
   const kidsProducts = products.filter((product) => product.kidsCollection);
-  const heroProduct =
-    mode === "kids" ? kidsProducts[0] : products.find((product) => product.featured) ?? products[0];
+  const parallaxSource = mode === "kids" && kidsProducts.length ? kidsProducts : products;
+  const parallaxProducts = buildParallaxProducts(parallaxSource);
 
   if (catalogStorage === "loading") {
     return (
@@ -35,100 +36,57 @@ export default function HomePage() {
 
   return (
     <div className="homepage">
-      <section className="home-hero">
-        <div className="home-container">
-          <div className="home-hero__grid">
-            <div className="home-hero__copy">
-              <span className="home-eyebrow">
-                <Sparkles aria-hidden="true" />
-                Little finds. Big happy.
-              </span>
-              <h1>
-                Good things for your <em>little world.</em>
-              </h1>
-              <p className="home-hero__description">
-                A happy place for pretty paper, feel-good finds, and clever things for every day.
-              </p>
-
-              <div className="home-mode-switch" aria-label="Choose a collection">
-                <button
-                  type="button"
-                  className={`home-mode-switch__button ${mode === "discover" ? "is-active" : ""}`}
-                  aria-pressed={mode === "discover"}
-                  onClick={() => setMode("discover")}
-                >
-                  <Sparkles aria-hidden="true" />
-                  Shop the edit
-                </button>
-                <button
-                  type="button"
-                  className={`home-mode-switch__button ${mode === "kids" ? "is-active" : ""}`}
-                  aria-pressed={mode === "kids"}
-                  onClick={() => setMode("kids")}
-                >
-                  <Baby aria-hidden="true" />
-                  Kids corner
-                </button>
-              </div>
-            </div>
-
-            <Link
-              href={heroProduct ? getProductPath(heroProduct) : "/shop"}
-              className={`home-hero__visual ${
-                (mode === "kids" && !kidsProducts.length) || !heroProduct?.images[0]
-                  ? "home-hero__visual--kids"
-                  : ""
-              }`}
-              aria-label={heroProduct ? `View ${heroProduct.name}` : "Browse the shop"}
-            >
-              {heroProduct?.images[0] ? (
-                <Image
-                  src={heroProduct.images[0]}
-                  alt={heroProduct.name}
-                  fill
-                  unoptimized
-                  priority
-                  sizes="(max-width: 960px) 100vw, 52vw"
-                  className="home-hero__image"
-                />
+      <HeroParallaxDemo
+        products={parallaxProducts}
+        header={
+          <div className="relative left-0 top-0 mx-auto w-full max-w-7xl px-4 py-16 md:py-40">
+            <span className="home-eyebrow">
+              <Sparkles aria-hidden="true" />
+              Little finds. Big happy.
+            </span>
+            <h1 className="mt-6 font-heading text-4xl font-medium text-fylter-darkText md:text-7xl">
+              {mode === "kids" ? (
+                <>
+                  A little corner for
+                  <br />
+                  <em className="italic text-fylter-gold">little wonders.</em>
+                </>
               ) : (
-                <div className="home-kids-art">
-                  <span className="home-kids-art__sparkle home-kids-art__sparkle--one" aria-hidden="true">
-                    <Sparkles />
-                  </span>
-                  <span className="home-kids-art__sparkle home-kids-art__sparkle--two" aria-hidden="true">
-                    <Sparkles />
-                  </span>
-                  <span className="home-kids-art__icon" aria-hidden="true">
-                    {mode === "kids" ? <Baby /> : <Sparkles />}
-                  </span>
-                  <strong>
-                    {mode === "kids"
-                      ? <>Little things<br />for little wonders</>
-                      : <>Your next favourite<br />is on its way</>}
-                  </strong>
-                </div>
+                <>
+                  Good things for your
+                  <br />
+                  <em className="italic text-fylter-gold">little world.</em>
+                </>
               )}
-              <span className="home-hero__stamp" aria-hidden="true">
-                {mode === "kids" ? "A little joy for little people" : "Picked with a little love"}
-              </span>
-              <div className="home-hero__image-note">
-                <div>
-                  <small>{mode === "kids" ? "The Kids Corner" : "A happy little discovery"}</small>
-                  <strong>
-                    {mode === "kids"
-                      ? "A little corner for big imaginations."
-                      : "Everyday things, with a little extra feeling."}
-                  </strong>
-                </div>
-                <span className="home-hero__flower" aria-hidden="true">
-                  <Sparkles />
-                </span>
-              </div>
-            </Link>
+            </h1>
+            <p className="mt-8 max-w-2xl text-base text-fylter-secondary md:text-xl">
+              {mode === "kids"
+                ? "Fun, thoughtful finds for curious minds and busy little hands."
+                : "A happy place for pretty paper, feel-good finds, and clever things for every day."}
+            </p>
+            <div className="home-mode-switch mt-8" aria-label="Choose a collection">
+              <button
+                type="button"
+                className={`home-mode-switch__button ${mode === "discover" ? "is-active" : ""}`}
+                aria-pressed={mode === "discover"}
+                onClick={() => setMode("discover")}
+              >
+                <Sparkles aria-hidden="true" />
+                Shop the edit
+              </button>
+              <button
+                type="button"
+                className={`home-mode-switch__button ${mode === "kids" ? "is-active" : ""}`}
+                aria-pressed={mode === "kids"}
+                onClick={() => setMode("kids")}
+              >
+                <Baby aria-hidden="true" />
+                Kids corner
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        }
+      />
 
       <section className="home-discovery" aria-live="polite">
         <div className="home-container">
@@ -209,4 +167,22 @@ export default function HomePage() {
       </section>
     </div>
   );
+}
+
+function buildParallaxProducts(items: Product[]) {
+  const source = items.filter((product) => product.images[0]);
+  if (!source.length) return [];
+
+  const mapped = source.map((product) => ({
+    title: product.name,
+    link: getProductPath(product),
+    thumbnail: product.images[0],
+  }));
+
+  const filled = [...mapped];
+  while (filled.length < 15) {
+    filled.push(mapped[filled.length % mapped.length]);
+  }
+
+  return filled.slice(0, 15);
 }
