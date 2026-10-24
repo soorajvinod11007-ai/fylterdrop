@@ -31,18 +31,23 @@ npm run start
 
 The storefront can run without a database, but product edits will then remain in the current browser. To share products across visitors and devices:
 
-1. Create a Supabase project and run both SQL migrations in `supabase/migrations/` in order using its SQL Editor.
+1. Create a Supabase project and run all SQL migrations in `supabase/migrations/` in order using its SQL Editor. This sets up the shared catalog, admin rate limiting, and the public-read `product-images` bucket.
 2. Import this repository into Vercel and configure these server-side environment variables for Production (and Preview if needed):
    - `SUPABASE_URL` — the Supabase project URL.
    - `SUPABASE_SERVICE_ROLE_KEY` — the project service-role key. Keep it server-only; never use a `NEXT_PUBLIC_` prefix.
    - `ADMIN_PIN` — a private passphrase of at least 12 characters.
    - `ADMIN_SESSION_SECRET` — a random secret used to sign admin sessions (at least 32 random bytes, e.g. generated with `openssl rand -base64 48`).
    - `NEXT_PUBLIC_SITE_URL` — `https://fylter.in`.
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — the Supabase anon/public API key. This is safe to expose in the browser; never use the service-role key here.
 3. Deploy the project. The first catalog request initializes the shared catalog with the products in `data/products.ts` if the database row is empty.
 4. In Vercel project settings, add `fylter.in` and `www.fylter.in` if desired. Update the domain registrar with the exact DNS records Vercel displays, then wait for Vercel to verify the domain and issue HTTPS.
 5. Open `/admin` and sign in using `ADMIN_PIN`. Product changes are shared when the Admin page reports that the shared catalog is connected. Login attempts are rate-limited using the Supabase-backed migration.
 
 Do not commit real environment values or put Supabase service-role credentials in client-side variables. The `.env.example` file contains blank placeholders only. If Supabase is unavailable or not configured, product edits stay in that browser and the Admin page displays the storage status.
+
+### Product Image Uploads
+
+Admin image uploads are optimized to WebP (up to 1200 px) and uploaded directly to the Supabase `product-images` bucket using short-lived signed upload URLs. The bucket is public-read so storefront visitors can load product photos; only the authenticated admin API can create upload URLs. Individual source files are limited to 10 MB, and Supabase free-tier storage and bandwidth quotas still apply. Existing externally hosted image URLs continue to work.
 
 ---
 
@@ -148,6 +153,7 @@ Storefront pages ──> AdminContext ──> /api/catalog ──> Supabase cata
                            │
                            └── browser localStorage fallback when shared storage is unavailable
 Admin UI ──> signed HTTP-only admin session ──> authenticated catalog writes
+Admin image upload ──> signed upload URL ──> Supabase Storage
 ```
 
 1. **State Hydration:** [AdminContext.tsx](file:///c:/Users/ADMIN/OneDrive/fylter/context/AdminContext.tsx) loads shared catalog data through `/api/catalog`; [data/products.ts](file:///c:/Users/ADMIN/OneDrive/fylter/data/products.ts) seeds a new catalog, while localStorage is a browser-only fallback.

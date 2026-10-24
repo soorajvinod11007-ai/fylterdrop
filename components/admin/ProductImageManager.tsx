@@ -10,82 +10,148 @@ interface ProductImageManagerProps {
 
 export default function ProductImageManager({ images, onChange }: ProductImageManagerProps) {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [manualUrl, setManualUrl] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editUrlValue, setEditUrlValue] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Compress raster images before saving them in the shared product catalog.
-  const processImageFile = (file: File): Promise<string> => {
+  const processImageFile = (
+    file: File,
+  ): Promise<{ blob: Blob; contentType: "image/webp" | "image/svg+xml" }> => {
     return new Promise((resolve, reject) => {
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         reject(new Error("Please upload a valid image file (PNG, JPG, WebP, SVG)."));
         return;
       }
 
-      // Max file size 5MB
-      if (file.size > 5 * 1024 * 1024) {
-        reject(new Error("Image size should be less than 5MB."));
+      const maxFileSize = 10 * 1024 * 1024;
+      if (file.size > maxFileSize) {
+        reject(new Error("Each image must be 10MB or smaller."));
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (file.type === "image/svg+xml") {
-          resolve(result);
+      if (file.type === "image/svg+xml") {
+        resolve({ blob: file, contentType: "image/svg+xml" });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const maxDim = 1200;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not optimize the image. Please try another file."));
           return;
         }
-
-        const img = new Image();
-        img.onload = () => {
-          const maxDim = 1200;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Could not optimize the image. Please try another file."));
+              return;
             }
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            reject(new Error("Could not optimize the image. Please try another file."));
-            return;
-          }
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/webp", 0.8));
-        };
-        img.onerror = () =>
-          reject(new Error("Could not optimize the image. Please try another file."));
-        img.src = result;
+            resolve({ blob, contentType: "image/webp" });
+          },
+          "image/webp",
+          0.8,
+        );
       };
-      reader.onerror = () => reject(new Error("Failed to read image file."));
-      reader.readAsDataURL(file);
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Could not read the image. Please try another file."));
+      };
+      img.src = objectUrl;
     });
   };
 
   const handleFiles = async (files: FileList | File[]) => {
+    if (isUploading) return;
     setErrorMessage(null);
     const newImages: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      try {
-        const dataUrl = await processImageFile(file);
-        newImages.push(dataUrl);
-      } catch (err: any) {
-        setErrorMessage(err.message || "Failed to process image.");
+    const uploadErrors: string[] = [];
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        try {
+          const { blob, contentType } = await processImageFile(file);
+          const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+          if (!anonKey) {
+            throw new Error("Image uploads need the Supabase public anon key configured.");
+          }
+          const signingResponse = await fetch("/api/catalog/image-upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contentType }),
+          });
+          const signingBody = await signingResponse.text();
+          let signingData: unknown;
+          try {
+            signingData = signingBody ? JSON.parse(signingBody) : {};
+          } catch {
+            throw new Error("Could not prepare the image upload. Please try again.");
+          }
+          if (!signingData || typeof signingData !== "object") {
+            throw new Error("Could not prepare the image upload. Please try again.");
+          }
+          const { uploadUrl, publicUrl, message } = signingData as {
+            uploadUrl?: unknown;
+            publicUrl?: unknown;
+            message?: unknown;
+          };
+          if (!signingResponse.ok) {
+            throw new Error(
+              typeof message === "string"
+                ? message
+                : "Could not prepare the image upload. Please try again.",
+            );
+          }
+          if (typeof uploadUrl !== "string" || typeof publicUrl !== "string") {
+            throw new Error("Image storage returned an invalid upload response.");
+          }
+
+          const uploadResponse = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: {
+              apikey: anonKey,
+              "Content-Type": contentType,
+              "x-upsert": "false",
+            },
+            body: blob,
+          });
+          if (!uploadResponse.ok) {
+            throw new Error(
+              `Image upload failed (${uploadResponse.status}). Please retry the upload.`,
+            );
+          }
+          newImages.push(publicUrl);
+        } catch (error: unknown) {
+          console.error("[Admin] Product image upload failed:", error);
+          uploadErrors.push(
+            error instanceof Error ? error.message : "Image upload failed. Please try again.",
+          );
+        }
       }
-    }
-    if (newImages.length > 0) {
-      onChange([...images, ...newImages]);
+      if (newImages.length > 0) onChange([...images, ...newImages]);
+      if (uploadErrors.length > 0) setErrorMessage(uploadErrors.join(" "));
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -156,6 +222,7 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => fileInputRef.current?.click()}
+        aria-busy={isUploading}
         className={`relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 group ${
           isDraggingOver
             ? "border-fylter-gold bg-fylter-gold/10 scale-[1.01]"
@@ -167,6 +234,7 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
           type="file"
           accept="image/*"
           multiple
+          disabled={isUploading}
           className="hidden"
           onChange={(e) => {
             if (e.target.files && e.target.files.length > 0) {
@@ -180,10 +248,12 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
             <Upload className="w-6 h-6" />
           </div>
           <p className="text-sm font-semibold text-fylter-offWhite">
-            Drag & drop product images here, or <span className="text-fylter-gold underline underline-offset-2">browse files</span>
+            {isUploading
+              ? "Uploading and optimizing images…"
+              : <>Drag & drop product images here, or <span className="text-fylter-gold underline underline-offset-2">browse files</span></>}
           </p>
           <p className="text-xs text-fylter-muted">
-            Supports PNG, JPG, WebP, SVG • Auto-optimized for instant loading
+            PNG, JPG, WebP, SVG • Up to 10MB per image • Optimized and stored securely
           </p>
         </div>
       </div>

@@ -1,6 +1,10 @@
+import { randomUUID } from "node:crypto";
 import type { Product } from "@/data/products";
 
 const CATALOG_ROW_ID = "main";
+const PRODUCT_IMAGE_BUCKET = "product-images";
+
+export type ProductImageContentType = "image/webp" | "image/svg+xml";
 
 function getSupabaseConfig() {
   const url = process.env.SUPABASE_URL?.replace(/\/+$/, "");
@@ -10,6 +14,56 @@ function getSupabaseConfig() {
 
 export function isSharedCatalogConfigured(): boolean {
   return getSupabaseConfig() !== null;
+}
+
+export async function createSignedProductImageUpload(
+  contentType: ProductImageContentType,
+): Promise<{ uploadUrl: string; publicUrl: string }> {
+  const config = getSupabaseConfig();
+  if (!config) {
+    throw new Error("Shared catalog storage is not configured.");
+  }
+
+  const extension = contentType === "image/svg+xml" ? "svg" : "webp";
+  const path = `${randomUUID()}.${extension}`;
+  const response = await fetch(
+    `${config.url}/storage/v1/object/upload/sign/${PRODUCT_IMAGE_BUCKET}/${path}`,
+    {
+      method: "POST",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ upsert: false }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Supabase image upload signing failed (${response.status}).`);
+  }
+
+  const data: unknown = await response.json();
+  if (
+    !data ||
+    typeof data !== "object" ||
+    !("token" in data) ||
+    typeof data.token !== "string"
+  ) {
+    throw new Error("Supabase returned an invalid image upload token.");
+  }
+
+  const uploadUrl = new URL(
+    `/storage/v1/object/upload/sign/${PRODUCT_IMAGE_BUCKET}/${path}`,
+    config.url,
+  );
+  uploadUrl.searchParams.set("token", data.token);
+
+  return {
+    uploadUrl: uploadUrl.toString(),
+    publicUrl: `${config.url}/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/${path}`,
+  };
 }
 
 async function supabaseRequest(path: string, init: RequestInit = {}): Promise<Response> {
