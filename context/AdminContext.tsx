@@ -32,6 +32,53 @@ const STORAGE_KEY_SITE = "fylter_admin_site_settings";
 const STORAGE_KEY_PRODUCTS = "fylter_admin_products";
 const INVALID_LOCAL_CATALOG_MESSAGE =
   "Saved browser catalog is invalid. Retry the server connection or reset the product catalog.";
+const CATALOG_TOO_LARGE_MESSAGE =
+  "The product catalog is too large to sync. Remove some uploaded images or use hosted image URLs, then retry.";
+
+type CatalogApiResponse = {
+  products?: unknown;
+  shared?: boolean;
+  message?: string;
+};
+
+async function readCatalogResponse(response: Response): Promise<CatalogApiResponse> {
+  const responseBody = await response.text();
+  let data: unknown;
+
+  try {
+    data = responseBody ? JSON.parse(responseBody) : {};
+  } catch {
+    if (
+      response.status === 413 ||
+      /request entity too large|payload too large/i.test(responseBody)
+    ) {
+      throw new Error(CATALOG_TOO_LARGE_MESSAGE);
+    }
+    throw new Error(
+      `The catalog service returned an invalid response (${response.status}). Please try again.`,
+    );
+  }
+
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error(
+      `The catalog service returned an invalid response (${response.status}). Please try again.`,
+    );
+  }
+
+  const result = data as CatalogApiResponse;
+  if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error(CATALOG_TOO_LARGE_MESSAGE);
+    }
+    throw new Error(
+      typeof result.message === "string"
+        ? result.message
+        : "The catalog could not be synced. Please retry the connection.",
+    );
+  }
+
+  return result;
+}
 
 const legacyCategoryMap: Record<string, ProductCategory> = {
   "Home & Living": "Smart Everyday",
@@ -114,10 +161,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     void fetch("/api/catalog", { cache: "no-store" })
       .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "The catalog could not be loaded from the server.");
-        }
+        const data = await readCatalogResponse(response);
 
         if (data.shared === true && Array.isArray(data.products)) {
           const sharedProducts = migrateProducts(data.products);
@@ -186,10 +230,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ products: catalogSnapshot }),
       })
         .then(async (response) => {
-          const data = await response.json();
-          if (!response.ok) {
-            throw new Error(data.message || "The shared catalog could not be saved.");
-          }
+          await readCatalogResponse(response);
           productsDirty.current = catalogRevision.current !== revision;
           setCatalogStorage("shared");
           setCatalogError(null);
@@ -240,10 +281,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     void fetch("/api/catalog", { cache: "no-store" })
       .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "The catalog could not be loaded from the server.");
-        }
+        const data = await readCatalogResponse(response);
         if (data.shared !== true || !Array.isArray(data.products)) {
           setCatalogStorage(localCatalogIsValid.current ? "local" : "error");
           setCatalogError(

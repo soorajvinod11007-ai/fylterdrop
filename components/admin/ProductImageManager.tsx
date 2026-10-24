@@ -16,7 +16,7 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Compress / resize image if needed before saving as Data URL to keep storage lean
+  // Compress raster images before saving them in the shared product catalog.
   const processImageFile = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       // Validate file type
@@ -34,7 +34,11 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        // If image is large, resize using Canvas to avoid bloating localStorage
+        if (file.type === "image/svg+xml") {
+          resolve(result);
+          return;
+        }
+
         const img = new Image();
         img.onload = () => {
           const maxDim = 1200;
@@ -47,19 +51,20 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
               width = Math.round((width * maxDim) / height);
               height = maxDim;
             }
-            const canvas = document.createElement("canvas");
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            if (ctx) {
-              ctx.drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL("image/webp", 0.85));
-              return;
-            }
           }
-          resolve(result);
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Could not optimize the image. Please try another file."));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/webp", 0.8));
         };
-        img.onerror = () => resolve(result);
+        img.onerror = () =>
+          reject(new Error("Could not optimize the image. Please try another file."));
         img.src = result;
       };
       reader.onerror = () => reject(new Error("Failed to read image file."));

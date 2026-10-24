@@ -202,6 +202,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/refund-policy" className="hover:text-fylter-gold transition-colors">
+                  Refund Policy
+                </Link>
+              </li>
+              <li>
                 <Link href="/privacy" className="hover:text-fylter-gold transition-colors">
                   Privacy Policy
                 </Link>
@@ -221,6 +226,9 @@ export default function Footer() {
               Orders below ₹{shippingPolicy.freeShippingMinimum} have a ₹{shippingPolicy.lowOrderHandlingCharge} handling charge.
               COD has an additional ₹{shippingPolicy.cashOnDeliveryCharge} charge. Delivery takes {shippingPolicy.deliveryTime}.
             </div>
+            <p className="text-xs text-fylter-muted/80 leading-relaxed">
+              Received a damaged product? An unpacking video, recorded from the moment you open the parcel, is required to claim a refund.
+            </p>
           </div>
         </div>
       </div>
