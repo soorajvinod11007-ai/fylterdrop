@@ -127,7 +127,7 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
           }
 
           const uploadResponse = await fetch(uploadUrl, {
-            method: "PUT",
+            method: "POST",
             headers: {
               apikey: anonKey,
               "Content-Type": contentType,
@@ -136,8 +136,24 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
             body: blob,
           });
           if (!uploadResponse.ok) {
+            const responseBody = await uploadResponse.text();
+            let uploadError = responseBody;
+            try {
+              const parsedError: unknown = responseBody ? JSON.parse(responseBody) : null;
+              if (
+                parsedError &&
+                typeof parsedError === "object" &&
+                "message" in parsedError &&
+                typeof parsedError.message === "string"
+              ) {
+                uploadError = parsedError.message;
+              }
+            } catch {
+              // Keep the storage response text when it is not JSON.
+            }
             throw new Error(
-              `Image upload failed (${uploadResponse.status}). Please retry the upload.`,
+              uploadError ||
+                `Image upload failed (${uploadResponse.status}). Please retry the upload.`,
             );
           }
           newImages.push(publicUrl);
