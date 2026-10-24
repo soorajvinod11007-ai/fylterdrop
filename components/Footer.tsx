@@ -198,11 +198,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/returns" className="hover:text-fylter-gold transition-colors">
-                  Return & Refund Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/refund-policy" className="hover:text-fylter-gold transition-colors">
                   Refund Policy
                 </Link>
               </li>

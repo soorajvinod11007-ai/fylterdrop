@@ -67,6 +67,42 @@ export default function ReturnsPage() {
               If a replacement cannot be provided due to out-of-stock inventory, a 100% full refund will be processed back to your original payment account (UPI or bank account) within 24 to 48 hours of verification.
             </p>
           </section>
+
+          <section className="space-y-4 pt-2">
+            <h2 className="text-xl font-bold text-fylter-offWhite sm:text-2xl">
+              Damaged Product Refund Policy
+            </h2>
+            <p>
+              We want you to be happy with every order. If your product arrives
+              damaged, you may be eligible for a refund, provided you follow the
+              requirement below.
+            </p>
+            <div className="space-y-3 rounded-xl border border-fylter-gold/30 border-l-4 border-l-fylter-gold bg-fylter-secondary/20 p-5 sm:p-6">
+              <h3 className="text-lg font-bold text-fylter-offWhite">
+                Unboxing video is required
+              </h3>
+              <p>
+                To claim a refund for a damaged product, you must have recorded
+                a continuous video of the package being opened. The video must:
+              </p>
+              <ul className="list-disc space-y-2 pl-5 text-xs sm:text-sm">
+                <li>
+                  Start before you open the package, with the sealed parcel and
+                  its shipping label visible
+                </li>
+                <li>
+                  Continue without cuts or pauses until the product is fully
+                  unpacked
+                </li>
+                <li>Clearly show the damage to the product</li>
+              </ul>
+            </div>
+            <p>
+              Refund requests for damaged items without a valid unboxing video
+              cannot be accepted. We recommend recording the video every time
+              you open a delivery so that you are covered.
+            </p>
+          </section>
         </div>
       </div>
     </div>
