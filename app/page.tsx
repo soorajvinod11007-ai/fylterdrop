@@ -86,6 +86,7 @@ export default function HomePage() {
                   src={heroProduct.images[0]}
                   alt={heroProduct.name}
                   fill
+                  unoptimized
                   priority
                   sizes="(max-width: 960px) 100vw, 52vw"
                   className="home-hero__image"
@@ -157,6 +158,7 @@ export default function HomePage() {
                           src={categoryItems[0].images[0]}
                           alt=""
                           fill
+                          unoptimized
                           sizes="(max-width: 640px) 90vw, (max-width: 960px) 50vw, 33vw"
                         />
                       )}

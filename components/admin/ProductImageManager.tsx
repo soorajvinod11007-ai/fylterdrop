@@ -126,14 +126,17 @@ export default function ProductImageManager({ images, onChange }: ProductImageMa
             throw new Error("Image storage returned an invalid upload response.");
           }
 
+          const uploadBody = new FormData();
+          uploadBody.append("cacheControl", "3600");
+          uploadBody.append("", blob);
           const uploadResponse = await fetch(uploadUrl, {
-            method: "POST",
+            method: "PUT",
             headers: {
               apikey: anonKey,
-              "Content-Type": contentType,
+              Authorization: `Bearer ${anonKey}`,
               "x-upsert": "false",
             },
-            body: blob,
+            body: uploadBody,
           });
           if (!uploadResponse.ok) {
             const responseBody = await uploadResponse.text();

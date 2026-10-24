@@ -35,6 +35,7 @@ export default function CategoryGrid() {
               src={categoryProducts[0]?.images[0] || category.image}
               alt=""
               fill
+              unoptimized={Boolean(categoryProducts[0]?.images[0])}
               sizes="(max-width: 640px) 90vw, (max-width: 960px) 50vw, 33vw"
             />
             <span className="discovery-category__sticker" aria-hidden="true">

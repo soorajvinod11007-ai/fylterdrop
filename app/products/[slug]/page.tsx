@@ -154,6 +154,7 @@ export default function ProductDetailPage() {
                 src={product.images[selectedImageIndex] || product.images[0]}
                 alt={product.name}
                 fill
+                unoptimized
                 priority
                 className="object-cover object-center transition-all duration-300"
               />
@@ -197,6 +198,7 @@ export default function ProductDetailPage() {
                       src={img}
                       alt={`${product.name} thumbnail ${idx + 1}`}
                       fill
+                      unoptimized
                       className="object-cover"
                     />
                   </button>
@@ -532,6 +534,7 @@ export default function ProductDetailPage() {
             src={product.images[selectedImageIndex] || product.images[0]}
             alt={product.name}
             fill
+            unoptimized
             className="object-contain"
           />
         </div>
