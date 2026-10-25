@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound, useParams } from "next/navigation";
 import { getProductPath } from "@/data/products";
 import {
@@ -13,7 +12,8 @@ import {
 } from "@/config/site";
 import { useAdmin } from "@/context/AdminContext";
 import ProductCard from "@/components/ProductCard";
-import { Badge, Modal } from "@/components/ui";
+import ProductImageCarousel from "@/components/ProductImageCarousel";
+import { Badge } from "@/components/ui";
 import {
   MessageCircle,
   Instagram,
@@ -25,7 +25,6 @@ import {
   RotateCcw,
   Sparkles,
   ChevronRight,
-  Maximize2,
   Share2
 } from "lucide-react";
 
@@ -39,11 +38,9 @@ export default function ProductDetailPage() {
       : undefined);
 
   // State
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [copiedSku, setCopiedSku] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
     const initial: Record<string, string> = {};
@@ -148,63 +145,15 @@ export default function ProductDetailPage() {
               LEFT: PRODUCT GALLERY
           ================================================== */}
           <div className="lg:col-span-7 space-y-4">
-            {/* Main Featured Image */}
-            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-fylter-secondary/30 border border-fylter-border/60 shadow-lg group">
-              <Image
-                src={product.images[selectedImageIndex] || product.images[0]}
-                alt={product.name}
-                fill
-                unoptimized
-                priority
-                className="object-cover object-center transition-all duration-300"
-              />
+            <ProductImageCarousel
+              images={product.images}
+              productName={product.name}
+            />
 
-              {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                {product.discount && (
-                  <Badge variant="gold">
-                    {product.discount}% OFF
-                  </Badge>
-                )}
-                <Badge variant="pill">
-                  {product.stockStatus}
-                </Badge>
-              </div>
-
-              {/* Lightbox Trigger */}
-              <button
-                onClick={() => setIsLightboxOpen(true)}
-                className="absolute top-4 right-4 p-2.5 rounded-full bg-fylter-darkest/70 hover:bg-fylter-darkest text-fylter-offWhite border border-fylter-border/60 transition-all opacity-0 group-hover:opacity-100"
-                aria-label="Expand image"
-              >
-                <Maximize2 className="w-4 h-4 text-fylter-gold" />
-              </button>
+            <div className="flex flex-wrap gap-2">
+              {product.discount && <Badge variant="gold">{product.discount}% OFF</Badge>}
+              <Badge variant="pill">{product.stockStatus}</Badge>
             </div>
-
-            {/* Thumbnail Navigation */}
-            {product.images.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                {product.images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImageIndex(idx)}
-                    className={`relative w-20 h-20 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
-                      selectedImageIndex === idx
-                        ? "border-fylter-gold shadow-gold-glow scale-105"
-                        : "border-fylter-border/40 hover:border-fylter-border opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={img}
-                      alt={`${product.name} thumbnail ${idx + 1}`}
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
 
             {/* Trust highlights under gallery */}
             <div className="pt-6 border-t border-fylter-border/30 grid grid-cols-3 gap-4 text-center">
@@ -524,21 +473,6 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* ── Lightbox (design-system Modal) ── */}
-      <Modal
-        open={isLightboxOpen}
-        onClose={() => setIsLightboxOpen(false)}
-      >
-        <div className="relative w-full h-[65vh]">
-          <Image
-            src={product.images[selectedImageIndex] || product.images[0]}
-            alt={product.name}
-            fill
-            unoptimized
-            className="object-contain"
-          />
-        </div>
-      </Modal>
     </div>
   );
 }

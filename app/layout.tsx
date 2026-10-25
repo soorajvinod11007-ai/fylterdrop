@@ -56,8 +56,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="dark" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col bg-fylter-offWhite text-fylter-darkText">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try {
+  const theme = localStorage.getItem("fylter-theme");
+  if (theme === "light" || theme === "dark") {
+    document.documentElement.dataset.theme = theme;
+  }
+} catch (error) {
+  console.error("Unable to read the theme preference.", error);
+}`,
+          }}
+        />
         <AdminProvider>
           <LayoutShell>{children}</LayoutShell>
         </AdminProvider>

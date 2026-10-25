@@ -8,11 +8,12 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import SmoothScroll from "@/components/SmoothScroll";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { useAdmin } from "@/context/AdminContext";
+import FloatingDock from "@/components/FloatingDock";
 
 const loadingStates = [
-  { text: "VIsit our instagram for special discounts" },
-  { text: "Curating a happy little collection" },
   { text: "Getting your Fylter favorites ready" },
+  { text: "Curating a happy little collection" },
+  { text: "VIsit our instagram for special discounts" },
 ];
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
@@ -46,6 +47,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           <main className="flex-1">{children}</main>
           <Footer />
           <FloatingWhatsApp />
+          <FloatingDock />
         </div>
       )}
     </>

@@ -2539,6 +2539,384 @@
   }
 }
 
+.site-theme-toggle {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--store-ink);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-standard) var(--motion-emphasized),
+    border-color var(--motion-standard) var(--motion-emphasized),
+    color var(--motion-standard) var(--motion-emphasized);
+}
+
+.site-theme-toggle svg {
+  width: 19px;
+  height: 19px;
+}
+
+.site-theme-toggle:hover {
+  border-color: var(--store-border);
+  background: var(--store-blush);
+  color: var(--store-terracotta-dark);
+}
+
+.floating-dock {
+  position: fixed;
+  z-index: 60;
+  right: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--store-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--store-paper) 92%, transparent);
+  box-shadow: 0 12px 32px rgba(46, 36, 27, 0.16);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  transform: translateX(50%);
+}
+
+.floating-dock__item {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  flex: 0 0 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--store-muted);
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.floating-dock__item svg {
+  width: 20px;
+  height: 20px;
+}
+
+.floating-dock__item:hover,
+.floating-dock__item:focus-visible,
+.floating-dock__item.is-active {
+  background: var(--store-blush);
+  color: var(--store-terracotta);
+}
+
+.floating-dock__item:hover {
+  transform: translateY(-3px) scale(1.06);
+}
+
+.floating-dock__label {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  padding: 6px 10px;
+  border: 1px solid var(--store-border);
+  border-radius: 8px;
+  background: var(--store-paper);
+  color: var(--store-ink);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(46, 36, 27, 0.12);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.floating-dock__item:hover .floating-dock__label,
+.floating-dock__item:focus-visible .floating-dock__label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.storefront-shell main {
+  padding-bottom: 88px;
+}
+
+.storefront-shell .site-theme-toggle:focus-visible,
+.storefront-shell .floating-dock__item:focus-visible {
+  outline: 2px solid var(--store-terracotta);
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .storefront-shell {
+  color-scheme: dark;
+  --store-bg: #191d1a;
+  --store-paper: #242a26;
+  --store-ink: #f2eee5;
+  --store-muted: #c4beb2;
+  --store-border: #434b44;
+  --store-terracotta: #df8d74;
+  --store-terracotta-dark: #c7735c;
+  --store-sage: #a1b292;
+  --store-blush: #3a302b;
+}
+
+html[data-theme="dark"] .storefront-shell main {
+  color: var(--store-ink);
+}
+
+html[data-theme="dark"] .storefront-shell main [class*="bg-fylter-darkest"],
+html[data-theme="dark"] .storefront-shell main [class*="bg-fylter-dark"],
+html[data-theme="dark"] .storefront-shell main [class*="bg-fylter-secondary"] {
+  background-color: var(--store-paper) !important;
+}
+
+html[data-theme="dark"] .storefront-shell main [class*="bg-fylter-primary"] {
+  background-color: #303732 !important;
+}
+
+html[data-theme="dark"] .storefront-shell main [class*="bg-fylter-offWhite"],
+html[data-theme="dark"] .storefront-shell main [class*="bg-fylter-softWhite"] {
+  background-color: var(--store-paper) !important;
+}
+
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-offWhite"],
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-paleGold"],
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-darkText"] {
+  color: var(--store-ink) !important;
+}
+
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-muted"],
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-secondary"] {
+  color: var(--store-muted) !important;
+}
+
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-gold"],
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-lightGold"],
+html[data-theme="dark"] .storefront-shell main [class*="text-fylter-accent"] {
+  color: var(--store-terracotta) !important;
+}
+
+html[data-theme="dark"] .storefront-shell main [class*="border-fylter-border"],
+html[data-theme="dark"] .storefront-shell main [class*="border-fylter-gold"] {
+  border-color: var(--store-border) !important;
+}
+
+html[data-theme="dark"] .storefront-shell main .glass-panel,
+html[data-theme="dark"] .storefront-shell main .glass-card,
+html[data-theme="dark"] .storefront-shell main .glass-pill,
+html[data-theme="dark"] .storefront-shell main .glass-gold {
+  border-color: var(--store-border);
+  background: var(--store-paper);
+  color: var(--store-ink);
+}
+
+html[data-theme="dark"] .storefront-shell main .btn-3d-gold,
+html[data-theme="dark"] .storefront-shell main [class*="bg-fylter-gold"] {
+  background-color: var(--store-terracotta) !important;
+  color: #191d1a !important;
+}
+
+html[data-theme="dark"] .storefront-shell main input:not([type="range"]),
+html[data-theme="dark"] .storefront-shell main textarea,
+html[data-theme="dark"] .storefront-shell main select {
+  border-color: var(--store-border) !important;
+  background-color: var(--store-paper) !important;
+  color: var(--store-ink) !important;
+}
+
+html[data-theme="dark"] .storefront-shell main input::placeholder,
+html[data-theme="dark"] .storefront-shell main textarea::placeholder {
+  color: var(--store-muted);
+}
+
+html[data-theme="dark"] .storefront-shell .site-announcement {
+  background: #2a332c;
+  color: var(--store-ink);
+}
+
+html[data-theme="dark"] .storefront-shell .site-announcement__mark {
+  background: var(--store-terracotta);
+}
+
+html[data-theme="dark"] .storefront-shell .site-announcement__divider {
+  color: var(--store-muted);
+}
+
+html[data-theme="dark"] .storefront-shell .site-nav,
+html[data-theme="dark"] .storefront-shell .site-nav--scrolled {
+  border-color: var(--store-border);
+  background: rgba(25, 29, 26, 0.96);
+  color: var(--store-ink);
+}
+
+html[data-theme="dark"] .storefront-shell .site-brand__name,
+html[data-theme="dark"] .storefront-shell .site-nav__icon-link,
+html[data-theme="dark"] .storefront-shell .site-theme-toggle {
+  color: var(--store-ink);
+}
+
+html[data-theme="dark"] .storefront-shell .site-brand__tagline {
+  color: var(--store-muted);
+}
+
+html[data-theme="dark"] .storefront-shell .site-nav__icon-link:hover,
+html[data-theme="dark"] .storefront-shell .site-theme-toggle:hover {
+  border-color: var(--store-border);
+  background: var(--store-blush);
+  color: var(--store-terracotta);
+}
+
+html[data-theme="dark"] .storefront-shell .site-nav__order {
+  background: var(--store-terracotta);
+  color: #191d1a;
+}
+
+html[data-theme="dark"] .storefront-shell .site-nav__order:hover {
+  background: var(--store-terracotta-dark);
+}
+
+html[data-theme="dark"] .storefront-shell .site-footer {
+  border-color: var(--store-border);
+  background: #242e28;
+  color: var(--store-ink);
+}
+
+html[data-theme="dark"] .storefront-shell .site-footer h4,
+html[data-theme="dark"] .storefront-shell .site-footer .text-fylter-gold,
+html[data-theme="dark"] .storefront-shell .site-footer .text-fylter-paleGold {
+  color: #f1c6b7;
+}
+
+html[data-theme="dark"] .storefront-shell .site-footer .text-fylter-muted {
+  color: #d0d3ca;
+}
+
+html[data-theme="dark"] .storefront-shell .site-footer .bg-fylter-primary,
+html[data-theme="dark"] .storefront-shell .site-footer .bg-fylter-secondary {
+  background: #303d34;
+}
+
+html[data-theme="dark"] .storefront-shell .site-footer .border-fylter-border {
+  border-color: #48554b;
+}
+
+html[data-theme="dark"] .storefront-shell .floating-concierge {
+  background: var(--store-terracotta);
+  color: #191d1a;
+}
+
+html[data-theme="dark"] .storefront-shell .floating-concierge:hover {
+  background: var(--store-terracotta-dark);
+}
+
+html[data-theme="dark"] .storefront-shell .floating-concierge svg {
+  color: #191d1a;
+}
+
+html[data-theme="dark"] .home-hero {
+  background: var(--store-bg);
+  color: var(--store-ink);
+}
+
+html[data-theme="dark"] .storefront-shell .section-label {
+  color: var(--store-terracotta);
+}
+
+html[data-theme="dark"] .storefront-shell .section-divider {
+  border-color: var(--store-border);
+}
+
+html[data-theme="dark"] .storefront-shell .skeleton {
+  background: linear-gradient(90deg, #303732, #242a26, #303732);
+}
+
+html[data-theme="dark"] .floating-dock {
+  background: color-mix(in srgb, var(--store-paper) 92%, transparent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+}
+
+@media (max-width: 640px) {
+  .storefront-shell .site-nav__actions > .site-nav__icon-link {
+    display: none;
+  }
+
+  .storefront-shell .site-nav__actions > .site-theme-toggle {
+    width: 48px;
+    height: 48px;
+  }
+
+  .storefront-shell .site-nav__actions > .site-nav__order {
+    width: 48px;
+    min-height: 48px;
+  }
+
+  .storefront-shell .floating-dock {
+    gap: 0;
+    padding-inline: 8px;
+  }
+
+  .storefront-shell .floating-concierge {
+    right: 14px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-dock__item,
+  .floating-dock__label {
+    transition: none;
+  }
+}
+
+.storefront-shell .apple-carousel-arrow {
+  border: 1px solid var(--store-border);
+  background: var(--store-paper);
+  color: var(--store-ink);
+}
+
+.storefront-shell .apple-carousel-arrow:hover:not(:disabled) {
+  background: var(--store-blush);
+  color: var(--store-terracotta);
+}
+
+.storefront-shell .apple-carousel-arrow svg {
+  color: currentColor;
+}
+
+.storefront-shell .apple-image-dialog {
+  background: var(--store-paper);
+  color: var(--store-ink);
+}
+
+.storefront-shell .apple-image-dialog__category,
+.storefront-shell .apple-image-dialog__title {
+  color: var(--store-ink);
+}
+
+.storefront-shell .apple-image-dialog__close {
+  background: var(--store-ink);
+  color: var(--store-paper);
+}
+
+.storefront-shell .apple-image-dialog__close svg {
+  color: currentColor;
+}
+
 /* ==================================================
    DESIGN SYSTEM ADDITIONS
 ================================================== */
