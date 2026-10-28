@@ -2,6 +2,7 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
+import { GoldMatrixCursorTrail } from "@/components/ui/gold-matrix-cursor-trail";
 
 const CheckIcon = ({ className }: { className?: string }) => {
   return (
@@ -140,11 +141,12 @@ export const MultiStepLoader = ({
           className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-fylter-offWhite/95 px-6 backdrop-blur-xl"
           aria-busy="true"
         >
+          <GoldMatrixCursorTrail />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(208,177,118,0.18),transparent_65%)]"
+            className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,rgba(208,177,118,0.18),transparent_65%)]"
           />
-          <div className="relative z-10 w-full max-w-md">
+          <div className="relative z-20 w-full max-w-md">
             <div className="mb-10 text-center">
               <p className="font-heading text-4xl font-semibold tracking-[0.18em] text-fylter-dark">
                 FYLTER
