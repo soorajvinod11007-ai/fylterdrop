@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAdmin } from "@/context/AdminContext";
 import type { SiteConfig } from "@/config/site";
 import { getProductPath, productCategories, type Product, type ProductVariant } from "@/data/products";
+import { MAX_CATALOG_PRODUCTS } from "@/lib/product-schema";
 import Link from "next/link";
 import { Toast as DSToast, Badge, Card } from "@/components/ui";
 import {
@@ -214,16 +215,45 @@ export default function AdminClient({ initialAuthenticated }: { initialAuthentic
   const handleProductFieldChange = (
     productId: string,
     field: keyof Product,
-    value: string | number | boolean | string[] | ProductVariant[] | Record<string, string>
+    value: string | number | boolean | string[] | ProductVariant[] | Record<string, string> | undefined
   ) => {
     updateProduct(productId, { [field]: value });
   };
 
   const handleAddNewProduct = () => {
-    const nextId = `fyl-${String(products.length + 1).padStart(3, "0")}`;
+    if (products.length >= MAX_CATALOG_PRODUCTS) {
+      setToast({
+        message: `The catalog limit of ${MAX_CATALOG_PRODUCTS.toLocaleString()} products has been reached.`,
+        type: "error",
+      });
+      return;
+    }
+
+    const highestId = products.reduce((highest, product) => {
+      const match = /^fyl-(\d+)$/i.exec(product.id);
+      return match ? Math.max(highest, Number(match[1])) : highest;
+    }, 0);
+    let sequence = highestId + 1;
+    let nextId = `fyl-${String(sequence).padStart(3, "0")}`;
+    while (
+      products.some(
+        (product) =>
+          product.id.toLowerCase() === nextId.toLowerCase() ||
+          product.sku.toLowerCase() === nextId.toLowerCase(),
+      )
+    ) {
+      sequence += 1;
+      nextId = `fyl-${String(sequence).padStart(3, "0")}`;
+    }
+    let slug = `new-product-${nextId.toLowerCase()}`;
+    let slugSuffix = 1;
+    while (products.some((product) => product.slug.toLowerCase() === slug.toLowerCase())) {
+      slug = `new-product-${nextId.toLowerCase()}-${slugSuffix}`;
+      slugSuffix += 1;
+    }
     const newProduct: Product = {
       id: nextId,
-      slug: `new-product-${Date.now()}`,
+      slug,
       sku: nextId.toUpperCase(),
       name: "New Product",
       category: "Smart Everyday",
@@ -705,12 +735,33 @@ function ProductsPanel({
   onDelete: (id: string) => void;
   onReset: () => void;
 }) {
+  const pageSize = 50;
+  const [page, setPage] = useState(0);
+  const [specificationDrafts, setSpecificationDrafts] = useState<Record<string, string>>({});
+  const [specificationErrors, setSpecificationErrors] = useState<Record<string, string>>({});
+  const pageCount = Math.max(1, Math.ceil(products.length / pageSize));
+  const visibleProducts = products.slice(page * pageSize, (page + 1) * pageSize);
+
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, pageCount - 1));
+  }, [pageCount]);
+
+  const addProduct = () => {
+    onAdd();
+    setPage(Math.floor(products.length / pageSize));
+  };
+
   return (
     <div className="space-y-4">
       {/* Products Toolbar */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-fylter-muted">
-          Managing <span className="text-fylter-gold font-bold">{products.length}</span> products
+          Showing{" "}
+          <span className="text-fylter-gold font-bold">
+            {products.length === 0 ? 0 : page * pageSize + 1}-
+            {Math.min((page + 1) * pageSize, products.length)}
+          </span>{" "}
+          of <span className="text-fylter-gold font-bold">{products.length}</span> products
         </p>
         <div className="flex items-center gap-3">
           <button
@@ -721,8 +772,14 @@ function ProductsPanel({
             <span>Reset Products</span>
           </button>
           <button
-            onClick={onAdd}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg btn-3d-gold text-xs font-bold tracking-wider uppercase"
+            onClick={addProduct}
+            disabled={products.length >= MAX_CATALOG_PRODUCTS}
+            title={
+              products.length >= MAX_CATALOG_PRODUCTS
+                ? `Maximum ${MAX_CATALOG_PRODUCTS.toLocaleString()} products`
+                : undefined
+            }
+            className="flex items-center gap-2 px-5 py-2 rounded-lg btn-3d-gold text-xs font-bold tracking-wider uppercase disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Product</span>
@@ -731,7 +788,7 @@ function ProductsPanel({
       </div>
 
       {/* Product List */}
-      {products.map((product) => (
+      {visibleProducts.map((product) => (
         <div
           key={product.id}
           className="rounded-2xl glass-panel border border-fylter-border/40 overflow-hidden transition-all hover:border-fylter-gold/30"
@@ -826,6 +883,32 @@ function ProductsPanel({
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
+
+                    {pageCount > 1 ? (
+                      <nav className="flex items-center justify-between gap-3 pt-2" aria-label="Product pages">
+                        <button
+                          type="button"
+                          disabled={page === 0}
+                          onClick={() => setPage((currentPage) => Math.max(0, currentPage - 1))}
+                          className="rounded-lg border border-fylter-border/50 px-4 py-2 text-xs text-fylter-offWhite disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-xs text-fylter-muted" aria-live="polite">
+                          Page {page + 1} of {pageCount}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={page >= pageCount - 1}
+                          onClick={() =>
+                            setPage((currentPage) => Math.min(pageCount - 1, currentPage + 1))
+                          }
+                          className="rounded-lg border border-fylter-border/50 px-4 py-2 text-xs text-fylter-offWhite disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Next
+                        </button>
+                      </nav>
+                    ) : null}
                   </select>
                 </div>
               </div>
@@ -916,8 +999,18 @@ function ProductsPanel({
                   <FieldLabel icon={Tag} label="Price (₹)" />
                   <input
                     type="number"
+                    min="0"
+                    max="10000000"
+                    step="0.01"
                     value={product.price}
-                    onChange={(e) => onFieldChange(product.id, "price", Number(e.target.value))}
+                    onChange={(e) => {
+                      const value = e.currentTarget.valueAsNumber;
+                      if (e.currentTarget.value === "") {
+                        onFieldChange(product.id, "price", 0);
+                      } else if (Number.isFinite(value)) {
+                        onFieldChange(product.id, "price", value);
+                      }
+                    }}
                     className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50 transition-all"
                   />
                 </div>
@@ -925,10 +1018,18 @@ function ProductsPanel({
                   <FieldLabel icon={Tag} label="Old Price (₹)" />
                   <input
                     type="number"
+                    min="0"
+                    max="10000000"
+                    step="0.01"
                     value={product.oldPrice ?? ""}
-                    onChange={(e) =>
-                      onFieldChange(product.id, "oldPrice", e.target.value ? Number(e.target.value) : undefined)
-                    }
+                    onChange={(e) => {
+                      const value = e.currentTarget.valueAsNumber;
+                      onFieldChange(
+                        product.id,
+                        "oldPrice",
+                        e.currentTarget.value === "" ? undefined : Number.isFinite(value) ? value : undefined,
+                      );
+                    }}
                     className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50 transition-all"
                     placeholder="Optional"
                   />
@@ -937,10 +1038,18 @@ function ProductsPanel({
                   <FieldLabel icon={Tag} label="Discount (%)" />
                   <input
                     type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
                     value={product.discount ?? ""}
-                    onChange={(e) =>
-                      onFieldChange(product.id, "discount", e.target.value ? Number(e.target.value) : undefined)
-                    }
+                    onChange={(e) => {
+                      const value = e.currentTarget.valueAsNumber;
+                      onFieldChange(
+                        product.id,
+                        "discount",
+                        e.currentTarget.value === "" ? undefined : Number.isFinite(value) ? value : undefined,
+                      );
+                    }}
                     className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50 transition-all"
                     placeholder="Optional"
                   />
@@ -997,22 +1106,51 @@ function ProductsPanel({
               <div>
                 <FieldLabel icon={Tag} label="Specifications (key: value, one per line)" />
                 <TextArea
-                  value={Object.entries(product.specifications)
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join("\n")}
+                  value={specificationDrafts[product.id] ??
+                    Object.entries(product.specifications)
+                      .map(([k, v]) => `${k}: ${v}`)
+                      .join("\n")}
                   onChange={(v) => {
+                    setSpecificationDrafts((drafts) => ({ ...drafts, [product.id]: v }));
                     const specs: Record<string, string> = {};
-                    v.split("\n").forEach((line) => {
+                    const lines = v.split(/\r?\n/);
+                    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+                      const line = lines[lineIndex];
+                      if (!line.trim()) continue;
                       const idx = line.indexOf(":");
-                      if (idx > 0) {
-                        specs[line.substring(0, idx).trim()] = line.substring(idx + 1).trim();
+                      const key = idx > 0 ? line.substring(0, idx).trim() : "";
+                      const value = idx > 0 ? line.substring(idx + 1).trim() : "";
+                      if (!key || !value) {
+                        setSpecificationErrors((errors) => ({
+                          ...errors,
+                          [product.id]: `Line ${lineIndex + 1} must use “key: value”.`,
+                        }));
+                        return;
                       }
+                      if (Object.hasOwn(specs, key)) {
+                        setSpecificationErrors((errors) => ({
+                          ...errors,
+                          [product.id]: `Line ${lineIndex + 1} repeats the “${key}” key.`,
+                        }));
+                        return;
+                      }
+                      specs[key] = value;
+                    }
+                    setSpecificationErrors((errors) => {
+                      const nextErrors = { ...errors };
+                      delete nextErrors[product.id];
+                      return nextErrors;
                     });
                     onFieldChange(product.id, "specifications", specs);
                   }}
                   rows={4}
                   placeholder="Capacity: 450 ml&#10;Weight: 320g"
                 />
+                {specificationErrors[product.id] ? (
+                  <p className="mt-1 text-xs text-red-400" role="alert">
+                    {specificationErrors[product.id]}
+                  </p>
+                ) : null}
               </div>
 
               {/* Flags & Status */}
@@ -1068,9 +1206,14 @@ function ProductsPanel({
                     min="0"
                     max="5"
                     value={product.rating ?? ""}
-                    onChange={(e) =>
-                      onFieldChange(product.id, "rating", e.target.value ? Number(e.target.value) : undefined)
-                    }
+                    onChange={(e) => {
+                      const value = e.currentTarget.valueAsNumber;
+                      onFieldChange(
+                        product.id,
+                        "rating",
+                        e.currentTarget.value === "" ? undefined : Number.isFinite(value) ? value : undefined,
+                      );
+                    }}
                     className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50 transition-all"
                     placeholder="4.9"
                   />
@@ -1079,10 +1222,18 @@ function ProductsPanel({
                   <FieldLabel icon={Star} label="Reviews Count" />
                   <input
                     type="number"
+                    min="0"
+                    max="1000000000"
+                    step="1"
                     value={product.reviewsCount ?? ""}
-                    onChange={(e) =>
-                      onFieldChange(product.id, "reviewsCount", e.target.value ? Number(e.target.value) : undefined)
-                    }
+                    onChange={(e) => {
+                      const value = e.currentTarget.valueAsNumber;
+                      onFieldChange(
+                        product.id,
+                        "reviewsCount",
+                        e.currentTarget.value === "" ? undefined : Number.isFinite(value) ? value : undefined,
+                      );
+                    }}
                     className="w-full px-4 py-2.5 rounded-lg bg-fylter-darkest border border-fylter-border/50 text-sm text-fylter-offWhite focus:outline-none focus:ring-2 focus:ring-fylter-gold/30 focus:border-fylter-gold/50 transition-all"
                     placeholder="128"
                   />

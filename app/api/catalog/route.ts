@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasSameOrigin, hasValidAdminSession } from "@/lib/admin-session";
 import { isSharedCatalogConfigured, readSharedCatalog, writeSharedCatalog } from "@/lib/supabase-catalog";
-import { catalogPayloadSchema } from "@/lib/product-schema";
+import {
+  catalogPayloadSchema,
+  formatProductValidationError,
+} from "@/lib/product-schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,7 +64,15 @@ export async function PUT(request: NextRequest) {
 
   const parsedPayload = catalogPayloadSchema.safeParse(payload);
   if (!parsedPayload.success) {
-    return noStoreJson({ message: "Product catalog data is invalid." }, 400);
+    const products =
+      payload && typeof payload === "object" && "products" in payload &&
+      Array.isArray(payload.products)
+        ? payload.products
+        : [];
+    return noStoreJson(
+      { message: formatProductValidationError(parsedPayload.error, products) },
+      400,
+    );
   }
 
   try {

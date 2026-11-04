@@ -123,6 +123,8 @@ Simply add a new object to the `products` array:
 }
 ```
 
+The admin catalog supports up to 2,000 product records (within the 32 MB catalog request limit) and displays them 50 at a time. Catalog edits are validated before they are saved; sync errors identify the affected product and field. In the Specifications editor, enter one `key: value` pair per line.
+
 ### To Change a Price:
 Open [`data/products.ts`](file:///c:/Users/ADMIN/OneDrive/fylter/data/products.ts), locate the product, and update `price` and `oldPrice`.
 

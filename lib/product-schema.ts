@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { productCategories } from "@/data/products";
 
+export const MAX_CATALOG_PRODUCTS = 2_000;
+
 function slugify(value: string): string {
   return value
     .normalize("NFKD")
@@ -17,10 +19,10 @@ export function createFallbackProductSlug(name: string, id: string): string {
 }
 
 export const productSchema = z.object({
-  id: z.string().min(1).max(100),
-  slug: z.string().max(200).optional(),
-  sku: z.string().min(1).max(100),
-  name: z.string().min(1).max(300),
+  id: z.string().trim().min(1).max(100),
+  slug: z.string().trim().max(200).optional(),
+  sku: z.string().trim().min(1).max(100),
+  name: z.string().trim().min(1).max(300),
   category: z.enum(productCategories),
   kidsCollection: z.boolean().optional(),
   isCombo: z.boolean().optional(),
@@ -55,5 +57,39 @@ export const productSchema = z.object({
   slug: product.slug?.trim() || createFallbackProductSlug(product.name, product.id),
 }));
 
-export const productListSchema = z.array(productSchema).max(500);
+export const productListSchema = z.array(productSchema).max(MAX_CATALOG_PRODUCTS);
 export const catalogPayloadSchema = z.object({ products: productListSchema }).strict();
+
+export function formatProductValidationError(
+  error: z.ZodError,
+  products: unknown[] = [],
+): string {
+  const maxIssues = 5;
+  const details = error.issues.slice(0, maxIssues).map((issue) => {
+    const productPathOffset = issue.path[0] === "products" ? 1 : 0;
+    const productIndex =
+      typeof issue.path[productPathOffset] === "number"
+        ? issue.path[productPathOffset]
+        : null;
+    if (productIndex === null) {
+      return `Catalog: ${issue.message}`;
+    }
+
+    const product = products[productIndex];
+    const productRecord =
+      product && typeof product === "object" && !Array.isArray(product)
+        ? (product as Record<string, unknown>)
+        : null;
+    const label =
+      (typeof productRecord?.sku === "string" && productRecord.sku.trim()) ||
+      (typeof productRecord?.name === "string" && productRecord.name.trim()) ||
+      `#${productIndex + 1}`;
+    const field = issue.path.slice(productPathOffset + 1).join(".") || "product";
+    return `Product ${productIndex + 1} (${label}), ${field}: ${issue.message}`;
+  });
+
+  const remaining = error.issues.length - details.length;
+  return `Catalog validation failed: ${details.join("; ")}${
+    remaining > 0 ? `; and ${remaining} more issue${remaining === 1 ? "" : "s"}` : ""
+  }`;
+}

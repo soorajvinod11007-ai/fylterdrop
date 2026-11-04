@@ -8,7 +8,10 @@ import {
   type Product,
   type ProductCategory,
 } from "@/data/products";
-import { productListSchema } from "@/lib/product-schema";
+import {
+  formatProductValidationError,
+  productListSchema,
+} from "@/lib/product-schema";
 
 // ─── Editable Site Config ────────────────────────────────────────
 interface AdminContextValue {
@@ -107,7 +110,11 @@ function migrateProducts(storedProducts: unknown[]): Product[] {
     };
   });
 
-  return productListSchema.parse(migratedProducts) as Product[];
+  const parsed = productListSchema.safeParse(migratedProducts);
+  if (!parsed.success) {
+    throw new Error(formatProductValidationError(parsed.error, migratedProducts));
+  }
+  return parsed.data;
 }
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
@@ -119,6 +126,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const productsDirty = useRef(false);
   const localCatalogIsValid = useRef(true);
   const sharedCatalogAvailable = useRef(false);
+  const catalogValidationFailed = useRef(false);
   const catalogRevision = useRef(0);
   const productsRef = useRef(products);
   const [syncAttempt, setSyncAttempt] = useState(0);
@@ -201,7 +209,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // Persist products to localStorage
   useEffect(() => {
-    if (isHydrated && (localCatalogIsValid.current || productsDirty.current)) {
+    if (
+      isHydrated &&
+      (localCatalogIsValid.current || productsDirty.current) &&
+      productListSchema.safeParse(products).success
+    ) {
       localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
     }
   }, [products, isHydrated]);
@@ -209,11 +221,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isHydrated || !productsDirty.current) return;
 
-    if (
-      catalogStorage === "saving" ||
-      catalogStorage === "loading" ||
-      catalogStorage === "error"
-    ) return;
+    if (catalogStorage === "saving" || catalogStorage === "loading") return;
+
+    const parsedProducts = productListSchema.safeParse(products);
+    if (!parsedProducts.success) {
+      catalogValidationFailed.current = true;
+      setCatalogStorage("error");
+      setCatalogError(formatProductValidationError(parsedProducts.error, products));
+      return;
+    }
+
+    if (catalogStorage === "error") return;
+    catalogValidationFailed.current = false;
 
     if (!sharedCatalogAvailable.current) {
       localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
@@ -232,6 +251,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         .then(async (response) => {
           await readCatalogResponse(response);
           productsDirty.current = catalogRevision.current !== revision;
+          catalogValidationFailed.current = false;
           setCatalogStorage("shared");
           setCatalogError(null);
         })
@@ -247,29 +267,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(timeout);
   }, [products, isHydrated, catalogStorage, syncAttempt]);
 
+  const resumeCatalogAfterValidationError = useCallback(() => {
+    if (!catalogValidationFailed.current) return;
+    catalogValidationFailed.current = false;
+    setCatalogError(null);
+    setCatalogStorage(sharedCatalogAvailable.current ? "shared" : "local");
+  }, []);
+
   const updateSiteSettings = useCallback((updates: Partial<SiteConfig>) => {
     setSiteSettings((prev) => ({ ...prev, ...updates }));
   }, []);
 
   const updateProduct = useCallback((productId: string, updates: Partial<Product>) => {
+    resumeCatalogAfterValidationError();
     catalogRevision.current += 1;
     productsDirty.current = true;
     setProducts((prev) =>
       prev.map((p) => (p.id === productId ? { ...p, ...updates } : p))
     );
-  }, []);
+  }, [resumeCatalogAfterValidationError]);
 
   const addProduct = useCallback((product: Product) => {
+    resumeCatalogAfterValidationError();
     catalogRevision.current += 1;
     productsDirty.current = true;
     setProducts((prev) => [...prev, product]);
-  }, []);
+  }, [resumeCatalogAfterValidationError]);
 
   const deleteProduct = useCallback((productId: string) => {
+    resumeCatalogAfterValidationError();
     catalogRevision.current += 1;
     productsDirty.current = true;
     setProducts((prev) => prev.filter((p) => p.id !== productId));
-  }, []);
+  }, [resumeCatalogAfterValidationError]);
 
   const retryCatalogSync = useCallback(() => {
     if (sharedCatalogAvailable.current) {
